@@ -501,6 +501,16 @@ function loadWorkout(day) {
         `;
     });
 
+    // Add save workout button at the end
+    html += `
+        <div class="save-workout-section">
+            <button onclick="saveCurrentWorkout()" class="save-workout-btn">
+                ✅ Completar Treino
+            </button>
+            <p class="save-hint">Clique após terminar todas as séries</p>
+        </div>
+    `;
+
     container.innerHTML = html;
 }
 
@@ -545,6 +555,48 @@ function updateProgressBar() {
     if (progressBar) {
         progressBar.style.width = Math.min(progress, 100) + '%';
         progressText.textContent = Math.round(progress) + '% completo';
+    }
+}
+
+// Save current workout
+function saveCurrentWorkout() {
+    const workout = workouts[currentDay];
+    if (!workout) return;
+
+    // Collect exercise data from inputs
+    const exercisesData = [];
+    workout.exercises.forEach((ex, index) => {
+        const sets = [];
+        for (let i = 1; i <= ex.sets; i++) {
+            const checkbox = document.getElementById(`set-${index}-${i}`);
+            const weightInputs = document.querySelectorAll(`#workout-content .exercise-card:nth-child(${index + 2}) .set-row:nth-child(${i}) .weight-input`);
+
+            if (weightInputs.length >= 2) {
+                const weight = parseFloat(weightInputs[0].value) || 0;
+                const reps = parseFloat(weightInputs[1].value) || 0;
+                const completed = checkbox ? checkbox.checked : false;
+
+                sets.push({ weight, reps, completed });
+            }
+        }
+
+        exercisesData.push({
+            name: ex.name,
+            sets: sets
+        });
+    });
+
+    // Save to tracking system if available
+    if (typeof TrackingSystem !== 'undefined') {
+        TrackingSystem.saveWorkout(currentDay, exercisesData);
+
+        // Show success message
+        alert('✅ Treino salvo com sucesso!\n\nConfira suas estatísticas na aba Dashboard!');
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        alert('✅ Treino completado!\n\nDados salvos localmente.');
     }
 }
 

@@ -1,0 +1,39 @@
+/* Save Workout Button */
+.save-workout-section {
+    margin: 2rem 0 1rem;
+    text-align: center;
+    padding: 1.5rem;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 12px;
+    border: 2px dashed var(--primary);
+}
+
+.save-workout-btn {
+    width: 100%;
+    max-width: 400px;
+    padding: 1.25rem 2rem;
+    background: linear-gradient(135deg, var(--green), var(--secondary));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+}
+
+.save-workout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(34, 197, 94, 0.5);
+}
+
+.save-workout-btn:active {
+    transform: scale(0.98);
+}
+
+.save-hint {
+    margin-top: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
