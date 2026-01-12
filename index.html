@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>💪 Sistema Guerreiro Natural - Albert</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>💪 Guerreiro Natural</h1>
+        <div class="stats">
+            <span id="currentWeight">68kg</span>
+            <span class="arrow">→</span>
+            <span class="goal">85kg</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Tabs Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('treino')">🏋️ Treino</button>
+            <button class="tab" onclick="showTab('nutricao')">🥩 Nutrição</button>
+            <button class="tab" onclick="showTab('progresso')">📊 Progresso</button>
+        </div>
+
+        <!-- Treino Tab -->
+        <div id="treino" class="tab-content active">
+            <div class="day-selector">
+                <button class="day-btn" onclick="selectDay('seg')">SEG</button>
+                <button class="day-btn" onclick="selectDay('ter')">TER</button>
+                <button class="day-btn" onclick="selectDay('qua')">QUA</button>
+                <button class="day-btn" onclick="selectDay('qui')">QUI</button>
+                <button class="day-btn" onclick="selectDay('sex')">SEX</button>
+                <button class="day-btn" onclick="selectDay('sab')">SAB</button>
+                <button class="day-btn" onclick="selectDay('dom')">DOM</button>
+            </div>
+
+            <div id="workout-content">
+                <!-- Workout will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Nutrição Tab -->
+        <div id="nutricao" class="tab-content">
+            <div class="nutrition-section">
+                <h2>🥩 Alimentos Permitidos</h2>
+
+                <div class="food-category">
+                    <h3>🥚 Proteínas</h3>
+                    <div class="food-grid">
+                        <div class="food-item">
+                            <span class="emoji">🥩</span>
+                            <p>Carne Vermelha Gorda</p>
+                            <small>Picanha, Fraldinha</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🍗</span>
+                            <p>Frango com Pele</p>
+                            <small>Coxa, Sobrecoxa</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🐟</span>
+                            <p>Peixes Gordos</p>
+                            <small>Salmão, Sardinha</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🥚</span>
+                            <p>Ovos Inteiros</p>
+                            <small>6-8 por dia</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🧀</span>
+                            <p>Queijos</p>
+                            <small>Mussarela, Prato</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="food-category">
+                    <h3>🍚 Carboidratos</h3>
+                    <div class="food-grid">
+                        <div class="food-item">
+                            <span class="emoji">🍚</span>
+                            <p>Arroz Branco</p>
+                            <small>200-300g/refeição</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🥔</span>
+                            <p>Batata Doce</p>
+                            <small>300-400g</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🍌</span>
+                            <p>Bananas</p>
+                            <small>3-5 por dia</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🌾</span>
+                            <p>Aveia</p>
+                            <small>Natural, não instantânea</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🍯</span>
+                            <p>Mel</p>
+                            <small>Pós-treino</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="food-category">
+                    <h3>🥑 Gorduras Saudáveis</h3>
+                    <div class="food-grid">
+                        <div class="food-item">
+                            <span class="emoji">🥥</span>
+                            <p>Óleo de Coco</p>
+                            <small>2-3 colheres/dia</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🫒</span>
+                            <p>Azeite Extra Virgem</p>
+                            <small>Saladas</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🥜</span>
+                            <p>Castanhas</p>
+                            <small>1 punhado/dia</small>
+                        </div>
+                        <div class="food-item">
+                            <span class="emoji">🧈</span>
+                            <p>Manteiga/Ghee</p>
+                            <small>Natural</small>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>⚡ Hacks Ectomorfo</h2>
+                <div class="hacks-list">
+                    <div class="hack-card">
+                        <h3>🥤 Shake Natural Bomba</h3>
+                        <p class="hack-cal">800 kcal</p>
+                        <ul>
+                            <li>400ml leite integral</li>
+                            <li>2 bananas</li>
+                            <li>3 ovos crus (pasteurizados)</li>
+                            <li>2 colheres mel</li>
+                            <li>1 colher óleo de coco</li>
+                            <li>Canela a gosto</li>
+                        </ul>
+                        <p class="hack-tip">💡 Tomar 2x ao dia entre refeições</p>
+                    </div>
+
+                    <div class="hack-card">
+                        <h3>☕ Café da Manhã Bomba</h3>
+                        <p class="hack-cal">1.000 kcal</p>
+                        <ul>
+                            <li>6 ovos mexidos com queijo</li>
+                            <li>2-3 colheres óleo de coco</li>
+                            <li>2 bananas + mel</li>
+                            <li>100g queijo</li>
+                        </ul>
+                        <p class="hack-tip">💡 Pós-treino CRÍTICO (30min)</p>
+                    </div>
+
+                    <div class="hack-card">
+                        <h3>🍽️ Densidade Calórica</h3>
+                        <p class="hack-cal">+500 kcal sem volume</p>
+                        <ul>
+                            <li>Azeite extra nas saladas</li>
+                            <li>Óleo de coco em tudo</li>
+                            <li>NUNCA jogue gemas fora</li>
+                            <li>Carnes gordas > magras</li>
+                            <li>Frango COM pele</li>
+                        </ul>
+                        <p class="hack-tip">💡 1 colher sopa óleo = 120 kcal</p>
+                    </div>
+                </div>
+
+                <h2>📅 Plano Diário 3.500 kcal</h2>
+                <div class="meal-plan">
+                    <div class="meal">
+                        <h4>5h00 - Treino Jejum</h4>
+                    </div>
+                    <div class="meal">
+                        <h4>6h30 - Pós-Treino (700 kcal)</h4>
+                        <p>6 ovos + queijo + 2 bananas + mel</p>
+                    </div>
+                    <div class="meal">
+                        <h4>9h30 - Refeição 2 (700 kcal)</h4>
+                        <p>200g frango + 250g arroz + salada</p>
+                    </div>
+                    <div class="meal">
+                        <h4>12h30 - Almoço (800 kcal)</h4>
+                        <p>250g carne vermelha + 300g batata + verduras</p>
+                    </div>
+                    <div class="meal">
+                        <h4>15h30 - Shake Natural (800 kcal)</h4>
+                        <p>Receita acima (leite + bananas + ovos)</p>
+                    </div>
+                    <div class="meal">
+                        <h4>18h30 - Jantar (600 kcal)</h4>
+                        <p>200g salmão + 200g arroz + salada</p>
+                    </div>
+                    <div class="meal">
+                        <h4>21h00 - Ceia (500 kcal)</h4>
+                        <p>4 ovos cozidos + 100g queijo + castanhas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progresso Tab -->
+        <div id="progresso" class="tab-content">
+            <div class="progress-section">
+                <h2>📊 Seu Progresso</h2>
+
+                <div class="weight-input">
+                    <label>Peso Atual:</label>
+                    <input type="number" id="weightInput" value="68" step="0.1"> kg
+                    <button onclick="updateWeight()">Atualizar</button>
+                </div>
+
+                <div class="goal-tracker">
+                    <h3>Meta: 68kg → 85kg</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar"></div>
+                    </div>
+                    <p id="progressText">0% completo</p>
+                </div>
+
+                <div class="milestones">
+                    <h3>🎯 Marcos</h3>
+                    <div class="milestone">
+                        <span>3 meses</span>
+                        <span>71-73kg</span>
+                    </div>
+                    <div class="milestone">
+                        <span>6 meses</span>
+                        <span>75-77kg</span>
+                    </div>
+                    <div class="milestone">
+                        <span>12 meses</span>
+                        <span>80-82kg</span>
+                    </div>
+                    <div class="milestone highlight">
+                        <span>18 meses</span>
+                        <span>85-90kg ✨</span>
+                    </div>
+                </div>
+
+                <div class="strength-goals">
+                    <h3>💪 Metas de Força</h3>
+                    <div class="strength-card">
+                        <h4>Agachamento</h4>
+                        <p class="current">Atual: ___kg</p>
+                        <p class="goal">Meta 12m: 145kg (1.75x peso)</p>
+                    </div>
+                    <div class="strength-card">
+                        <h4>Supino</h4>
+                        <p class="current">Atual: ___kg</p>
+                        <p class="goal">Meta 12m: 95kg (1.2x peso)</p>
+                    </div>
+                    <div class="strength-card">
+                        <h4>Terra</h4>
+                        <p class="current">Atual: ___kg</p>
+                        <p class="goal">Meta 12m: 165kg (2x peso)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="showTab('treino')">
+            <span class="icon">🏋️</span>
+            <span class="label">Treino</span>
+        </button>
+        <button class="nav-btn" onclick="showTab('nutricao')">
+            <span class="icon">🥩</span>
+            <span class="label">Nutrição</span>
+        </button>
+        <button class="nav-btn" onclick="showTab('progresso')">
+            <span class="icon">📊</span>
+            <span class="label">Progresso</span>
+        </button>
+    </nav>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
