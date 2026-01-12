@@ -8,6 +8,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>💪 Sistema Guerreiro Natural - Albert</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="tracking.js"></script>
 </head>
 
 <body>
@@ -28,6 +30,7 @@
             <button class="tab active" onclick="showTab('treino')">🏋️ Treino</button>
             <button class="tab" onclick="showTab('nutricao')">🥩 Nutrição</button>
             <button class="tab" onclick="showTab('progresso')">📊 Progresso</button>
+            <button class="tab" onclick="showTab('dashboard')">📈 Dashboard</button>
         </div>
 
         <!-- Treino Tab -->
@@ -215,6 +218,13 @@
             </div>
         </div>
 
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <div id="dashboard-container">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
         <!-- Progresso Tab -->
         <div id="progresso" class="tab-content">
             <div class="progress-section">
@@ -289,6 +299,10 @@
         <button class="nav-btn" onclick="showTab('progresso')">
             <span class="icon">📊</span>
             <span class="label">Progresso</span>
+        </button>
+        <button class="nav-btn" onclick="showTab('dashboard')">
+            <span class="icon">📈</span>
+            <span class="label">Dashboard</span>
         </button>
     </nav>
 

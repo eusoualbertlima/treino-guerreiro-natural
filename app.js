@@ -407,7 +407,13 @@ function showTab(tabName) {
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.querySelector(`[onclick="showTab('${tabName}')"].nav-btn`).classList.add('active');
+    const navBtn = document.querySelector(`[onclick="showTab('${tabName}')"].nav-btn`);
+    if (navBtn) navBtn.classList.add('active');
+
+    // Load dashboard content if dashboard tab
+    if (tabName === 'dashboard' && typeof renderDashboard !== 'undefined') {
+        document.getElementById('dashboard-container').innerHTML = renderDashboard();
+    }
 }
 
 // Day Selection
