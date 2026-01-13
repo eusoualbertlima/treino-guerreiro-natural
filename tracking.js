@@ -18,7 +18,12 @@ const TrackingSystem = {
             completed: true
         });
 
+        // Save to main storage
         localStorage.setItem('workoutHistory', JSON.stringify(history));
+
+        // AUTOMATIC BACKUP - Save redundant copy
+        this.createAutoBackup();
+
         this.updateStats();
     },
 
@@ -163,6 +168,69 @@ const TrackingSystem = {
     // Get total workouts count
     getTotalWorkouts() {
         return this.getWorkoutHistory().length;
+    },
+
+    // Create automatic backup (redundant copy)
+    createAutoBackup() {
+        const data = {
+            workoutHistory: this.getWorkoutHistory(),
+            weight: localStorage.getItem('weight'),
+            programStartDate: localStorage.getItem('programStartDate'),
+            backupDate: new Date().toISOString()
+        };
+
+        // Save to backup key
+        localStorage.setItem('workoutBackup', JSON.stringify(data));
+        localStorage.setItem('lastBackupDate', new Date().toISOString());
+
+        // Check if should auto-download (weekly)
+        this.checkWeeklyAutoDownload();
+    },
+
+    // Try to recover from backup if main data is lost
+    tryRecoverFromBackup() {
+        const backup = localStorage.getItem('workoutBackup');
+        if (!backup) return false;
+
+        try {
+            const data = JSON.parse(backup);
+            if (data.workoutHistory && data.workoutHistory.length > 0) {
+                // Main data is empty or corrupted, restore from backup
+                if (this.getWorkoutHistory().length === 0) {
+                    this.importData(data);
+                    console.log('✅ Dados recuperados automaticamente do backup!');
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao recuperar backup:', error);
+        }
+        return false;
+    },
+
+    // Check if should auto-download backup (weekly)
+    checkWeeklyAutoDownload() {
+        const lastDownload = localStorage.getItem('lastAutoDownload');
+        const now = new Date();
+
+        if (!lastDownload) {
+            localStorage.setItem('lastAutoDownload', now.toISOString());
+            return;
+        }
+
+        const lastDate = new Date(lastDownload);
+        const daysSince = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
+
+        // Auto-download every 7 days
+        if (daysSince >= 7) {
+            this.exportData();
+            localStorage.setItem('lastAutoDownload', now.toISOString());
+
+            // Show notification
+            setTimeout(() => {
+                alert('📥 Backup semanal automático!\n\nSeus dados foram baixados para segurança.');
+            }, 1000);
+        }
     }
 };
 
@@ -414,7 +482,18 @@ function closeDashboard() {
 
 // Initialize on load
 window.addEventListener('load', () => {
+    // Try to recover from backup if needed
+    TrackingSystem.tryRecoverFromBackup();
+
+    // Update stats
     TrackingSystem.updateStats();
+
+    // Check backup status
+    const backupDate = localStorage.getItem('lastBackupDate');
+    if (backupDate) {
+        const daysOld = Math.floor((new Date() - new Date(backupDate)) / (1000 * 60 * 60 * 24));
+        console.log(`📦 Último backup: ${daysOld} dia(s) atrás`);
+    }
 });
 
 // Import backup handlers
