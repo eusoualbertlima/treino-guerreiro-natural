@@ -116,6 +116,53 @@ const TrackingSystem = {
         });
 
         return exerciseData.slice(-10); // Last 10 occurrences
+    },
+
+    // Export data to JSON (for backup)
+    exportData() {
+        const data = {
+            workoutHistory: this.getWorkoutHistory(),
+            weight: localStorage.getItem('weight'),
+            programStartDate: localStorage.getItem('programStartDate'),
+            exportDate: new Date().toISOString()
+        };
+
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `treino-backup-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+
+        URL.revokeObjectURL(url);
+    },
+
+    // Import data from JSON
+    importData(jsonData) {
+        try {
+            if (jsonData.workoutHistory) {
+                localStorage.setItem('workoutHistory', JSON.stringify(jsonData.workoutHistory));
+            }
+            if (jsonData.weight) {
+                localStorage.setItem('weight', jsonData.weight);
+            }
+            if (jsonData.programStartDate) {
+                localStorage.setItem('programStartDate', jsonData.programStartDate);
+            }
+
+            this.updateStats();
+            return true;
+        } catch (error) {
+            console.error('Erro ao importar dados:', error);
+            return false;
+        }
+    },
+
+    // Get total workouts count
+    getTotalWorkouts() {
+        return this.getWorkoutHistory().length;
     }
 };
 
@@ -256,6 +303,16 @@ function renderDashboard() {
             <button onclick="showWeeklyReport()" class="action-btn">📈 Ver Relatório Semanal</button>
             <button onclick="showProgressCharts()" class="action-btn">📊 Gráficos de Evolução</button>
         </div>
+        
+        <div class="quick-actions">
+            <h3>💾 Gerenciar Dados</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                Total de treinos salvos: <strong>${TrackingSystem.getTotalWorkouts()}</strong>
+            </p>
+            <button onclick="TrackingSystem.exportData()" class="action-btn">📥 Exportar Backup</button>
+            <button onclick="importBackup()" class="action-btn">📤 Importar Backup</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+        </div>
     `;
 }
 
@@ -359,3 +416,29 @@ function closeDashboard() {
 window.addEventListener('load', () => {
     TrackingSystem.updateStats();
 });
+
+// Import backup handlers
+function importBackup() {
+    document.getElementById('importFile').click();
+}
+
+function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (TrackingSystem.importData(data)) {
+                alert('✅ Dados importados com sucesso!\n\nTreinos restaurados: ' + data.workoutHistory.length);
+                location.reload(); // Refresh to show imported data
+            } else {
+                alert('❌ Erro ao importar dados. Verifique o arquivo.');
+            }
+        } catch (error) {
+            alert('❌ Arquivo inválido. Use apenas backups exportados pelo app.');
+        }
+    };
+    reader.readAsText(file);
+}
