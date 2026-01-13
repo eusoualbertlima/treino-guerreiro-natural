@@ -458,6 +458,10 @@ function loadWorkout(day) {
     `;
 
     workout.exercises.forEach((ex, index) => {
+        // Get last workout data for this exercise
+        const lastData = getLastWorkoutData(day, ex.name);
+        const progressionSuggestion = getProgressionSuggestion(ex.name, lastData);
+
         html += `
             <div class="exercise-card">
                 <div class="exercise-header">
@@ -467,6 +471,16 @@ function loadWorkout(day) {
                         <p>${ex.target}</p>
                     </div>
                 </div>
+                
+                ${lastData ? `
+                <div class="last-workout-data">
+                    <span class="last-workout-label">📊 Último treino:</span>
+                    <span class="last-workout-value">${lastData.maxWeight}kg x ${lastData.avgReps} reps</span>
+                    ${progressionSuggestion ? `
+                    <span class="progression-hint">💪 Tente: ${progressionSuggestion}kg</span>
+                    ` : ''}
+                </div>
+                ` : ''}
                 
                 <div class="exercise-details">
                     <div class="detail-item">
@@ -505,7 +519,7 @@ function loadWorkout(day) {
                 </div>
                 
                 <div class="sets-tracker">
-                    ${generateSetsTracker(ex.sets, index)}
+                    ${generateSetsTracker(ex.sets, index, lastData)}
                 </div>
             </div>
         `;
@@ -525,16 +539,20 @@ function loadWorkout(day) {
 }
 
 // Generate Sets Tracker
-function generateSetsTracker(numSets, exIndex) {
+function generateSetsTracker(numSets, exIndex, lastData = null) {
     let html = '';
     for (let i = 1; i <= numSets; i++) {
+        // Pre-fill with last workout data if available
+        const lastWeight = lastData && lastData.sets && lastData.sets[i - 1] ? lastData.sets[i - 1].weight : '';
+        const lastReps = lastData && lastData.sets && lastData.sets[i - 1] ? lastData.sets[i - 1].reps : '';
+
         html += `
             <div class="set-row">
                 <input type="checkbox" class="set-checkbox" id="set-${exIndex}-${i}">
                 <span class="set-info">Série ${i}:</span>
-                <input type="number" class="weight-input" placeholder="kg" step="0.5">
+                <input type="number" class="weight-input" placeholder="${lastWeight || 'kg'}" value="${lastWeight}" step="0.5">
                 <span>x</span>
-                <input type="number" class="weight-input" placeholder="reps" style="width: 60px;">
+                <input type="number" class="weight-input" placeholder="${lastReps || 'reps'}" value="${lastReps}" style="width: 60px;">
             </div>
         `;
     }
@@ -620,3 +638,56 @@ window.addEventListener('load', () => {
         updateProgressBar();
     }
 });
+
+// Get last workout data for specific exercise
+function getLastWorkoutData(day, exerciseName) {
+    if (typeof TrackingSystem === 'undefined') return null;
+
+    const history = TrackingSystem.getWorkoutHistory();
+    if (!history || history.length === 0) return null;
+
+    // Find last workout for this day
+    const dayWorkouts = history.filter(w => w.day === day).sort((a, b) => {
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    if (dayWorkouts.length === 0) return null;
+
+    // Get most recent workout
+    const lastWorkout = dayWorkouts[0];
+
+    // Find this exercise in the workout
+    const exerciseData = lastWorkout.exercises.find(e => e.name === exerciseName);
+    if (!exerciseData || !exerciseData.sets || exerciseData.sets.length === 0) return null;
+
+    // Calculate stats
+    const validSets = exerciseData.sets.filter(s => s.weight > 0 && s.reps > 0);
+    if (validSets.length === 0) return null;
+
+    const maxWeight = Math.max(...validSets.map(s => s.weight));
+    const avgReps = Math.round(validSets.reduce((sum, s) => sum + s.reps, 0) / validSets.length);
+
+    return {
+        maxWeight,
+        avgReps,
+        sets: exerciseData.sets,
+        date: lastWorkout.date
+    };
+}
+
+// Get progression suggestion
+function getProgressionSuggestion(exerciseName, lastData) {
+    if (!lastData) return null;
+
+    // Check if it's a lower body exercise (bigger jumps)
+    const lowerBodyExercises = ['Agachamento', 'Leg Press', 'Levantamento Terra', 'Stiff'];
+    const isLowerBody = lowerBodyExercises.some(ex => exerciseName.includes(ex));
+
+    // Progression increment
+    const increment = isLowerBody ? 5 : 2.5;
+
+    // Suggest progression if avg reps was good (>= 80% of target or completed all)
+    const suggestion = lastData.maxWeight + increment;
+
+    return suggestion;
+}
