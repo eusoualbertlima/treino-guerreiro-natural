@@ -1,5 +1,6 @@
 /* Save Workout Button */
 .save-workout-section {
+    display: block !important;
     margin: 2rem 0 1rem;
     text-align: center;
     padding: 1.5rem;
@@ -9,8 +10,11 @@
 }
 
 .save-workout-btn {
+    display: block !important;
     width: 100%;
     max-width: 400px;
+    margin: 0 auto;
+    min-height: 60px;
     padding: 1.25rem 2rem;
     background: linear-gradient(135deg, var(--green), var(--secondary));
     border: none;
@@ -33,6 +37,7 @@
 }
 
 .save-hint {
+    display: block !important;
     margin-top: 0.75rem;
     color: var(--text-secondary);
     font-size: 0.85rem;

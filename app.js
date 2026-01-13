@@ -389,21 +389,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Tab Management
 function showTab(tabName) {
-    // Hide all tabs
+    // Hide all tab contents
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
+        tab.style.display = 'none';
     });
 
-    // Show selected tab
-    document.getElementById(tabName).classList.add('active');
+    // Show selected tab content
+    const selectedTab = document.getElementById(tabName);
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+        selectedTab.style.display = 'block';
+    }
 
-    // Update tab buttons
+    // Update top tab buttons
     document.querySelectorAll('.tab').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 
-    // Update bottom nav
+    // Update bottom nav buttons
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -412,7 +419,10 @@ function showTab(tabName) {
 
     // Load dashboard content if dashboard tab
     if (tabName === 'dashboard' && typeof renderDashboard !== 'undefined') {
-        document.getElementById('dashboard-container').innerHTML = renderDashboard();
+        const container = document.getElementById('dashboard-container');
+        if (container) {
+            container.innerHTML = renderDashboard();
+        }
     }
 }
 
