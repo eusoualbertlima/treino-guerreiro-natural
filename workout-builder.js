@@ -313,7 +313,7 @@ function renderWorkoutTemplates() {
     }).join('');
 }
 
-// Render exercise library with filters
+// Render exercise library with filters - SIMPLIFIED VIEW
 function renderExerciseLibrary() {
     const container = document.getElementById('exerciseLibraryList');
     if (!container) return;
@@ -327,27 +327,22 @@ function renderExerciseLibrary() {
         const isSelected = selectedExercisesForTemplate.some(e => e.exerciseId === exercise.id);
 
         return `
-        <div class="exercise-card ${isSelected ? 'selected' : ''}" data-id="${exercise.id}">
-            <div class="exercise-header">
+        <div class="exercise-row ${isSelected ? 'selected' : ''}" data-id="${exercise.id}" onclick="toggleExerciseSelection('${exercise.id}')">
+            <div class="exercise-main">
                 <span class="exercise-name">${exercise.name}</span>
-                <span class="muscle-badge" style="background: ${muscleGroup?.color}20; color: ${muscleGroup?.color}">
-                    ${muscleGroup?.icon} ${muscleGroup?.name}
+                <span class="muscle-badge-mini" style="background: ${muscleGroup?.color}20; color: ${muscleGroup?.color}">
+                    ${muscleGroup?.icon}
                 </span>
             </div>
-            <p class="exercise-description">${exercise.description}</p>
-            <div class="exercise-meta">
-                <span>🏋️ ${exercise.equipment}</span>
-                <span>📊 ${exercise.difficulty === 'iniciante' ? 'Iniciante' : exercise.difficulty === 'intermediario' ? 'Intermediário' : 'Avançado'}</span>
+            <div class="exercise-right">
+                <span class="equipment-tag">${exercise.equipment}</span>
+                <span class="add-indicator">${isSelected ? '✓' : '+'}</span>
             </div>
-            <button class="btn ${isSelected ? 'btn-secondary' : 'btn-primary'} btn-sm" 
-                    onclick="toggleExerciseSelection('${exercise.id}')" 
-                    style="width: 100%; margin-top: 10px;">
-                ${isSelected ? '✓ Selecionado' : '+ Adicionar'}
-            </button>
         </div>
         `;
     }).join('');
 }
+
 
 // Render muscle filter buttons
 function renderMuscleFilters() {

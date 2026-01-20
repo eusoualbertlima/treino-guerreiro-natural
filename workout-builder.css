@@ -81,10 +81,85 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
     padding-right: 5px;
 }
 
+/* Simplified Exercise Row */
+.exercise-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.exercise-row:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.exercise-row.selected {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+}
+
+.exercise-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.exercise-name {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #fff;
+}
+
+.muscle-badge-mini {
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+
+.exercise-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.equipment-tag {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.add-indicator {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.exercise-row.selected .add-indicator {
+    background: rgba(16, 185, 129, 0.3);
+    color: #10b981;
+}
+
+/* Keep old card styles for backwards compatibility */
 .exercise-card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -112,11 +187,6 @@
     gap: 8px;
 }
 
-.exercise-name {
-    font-weight: 600;
-    font-size: 1rem;
-}
-
 .muscle-badge {
     padding: 4px 10px;
     border-radius: 15px;
@@ -137,6 +207,7 @@
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.5);
 }
+
 
 /* Selected Exercises */
 .selected-exercises {
