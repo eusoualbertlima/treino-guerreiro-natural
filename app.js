@@ -445,102 +445,32 @@ function selectDay(day) {
     loadWorkout(day);
 }
 
-// Load Workout
+// Load Workout (Delegates to Conscious Training)
 function loadWorkout(day) {
-    const workout = workouts[day];
-    const container = document.getElementById('workout-content');
+    // Instead of loading rigid workouts, we initialize the Conscious flow
+    // visual feedback for day selection is kept for reference but functionality changes
+    console.log('Selecionado dia:', day);
 
-    if (!workout) {
-        container.innerHTML = '<p>Treino não encontrado</p>';
-        return;
-    }
-
-    let html = `
-        <div class="workout-header">
-            <h2>${workout.name}</h2>
-            <p>⏱️ ${workout.duration} | 🎯 ${workout.focus}</p>
-        </div>
-    `;
-
-    workout.exercises.forEach((ex, index) => {
-        // Get last workout data for this exercise
-        const lastData = getLastWorkoutData(day, ex.name);
-        const progressionSuggestion = getProgressionSuggestion(ex.name, lastData);
-
-        html += `
-            <div class="exercise-card">
-                <div class="exercise-header">
-                    <div class="exercise-number">${index + 1}</div>
-                    <div class="exercise-title">
-                        <h3>${ex.name}</h3>
-                        <p>${ex.target}</p>
-                    </div>
-                </div>
-                
-                ${lastData ? `
-                <div class="last-workout-data">
-                    <span class="last-workout-label">📊 Último treino:</span>
-                    <span class="last-workout-value">${lastData.maxWeight}kg x ${lastData.avgReps} reps</span>
-                    ${progressionSuggestion ? `
-                    <span class="progression-hint">💪 Tente: ${progressionSuggestion}kg</span>
-                    ` : ''}
-                </div>
-                ` : ''}
-                
-                <div class="exercise-details">
-                    <div class="detail-item">
-                        <div class="detail-label">Séries</div>
-                        <div class="detail-value">${ex.sets}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Reps</div>
-                        <div class="detail-value">${ex.reps}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Descanso</div>
-                        <div class="detail-value">${ex.rest}</div>
-                    </div>
-                </div>
-                
-                <div class="exercise-details">
-                    <div class="detail-item">
-                        <div class="detail-label">RIR</div>
-                        <div class="detail-value">${ex.rir}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Carga</div>
-                        <div class="detail-value">${ex.load}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Sets</div>
-                        <div class="detail-value">
-                            <input type="checkbox" class="set-tracker" data-ex="${index}">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="exercise-notes">
-                    ${ex.notes}
-                </div>
-                
-                <div class="sets-tracker">
-                    ${generateSetsTracker(ex.sets, index, lastData)}
-                </div>
-            </div>
-        `;
+    // Update day buttons visual state
+    document.querySelectorAll('.day-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase().includes(day)) {
+            btn.classList.add('active');
+        }
     });
 
-    // Add save workout button at the end
-    html += `
-        <div class="save-workout-section">
-            <button onclick="saveCurrentWorkout()" class="save-workout-btn">
-                ✅ Completar Treino
-            </button>
-            <p class="save-hint">Clique após terminar todas as séries</p>
-        </div>
-    `;
+    const container = document.getElementById('workout-content');
+    if (!container) return;
 
-    container.innerHTML = html;
+    // Use Conscious Training System
+    if (typeof initConsciousTraining !== 'undefined') {
+        container.innerHTML = '<div class="loading-spinner">🧘 Conectando com sua intuição...</div>';
+        setTimeout(() => {
+            initConsciousTraining();
+        }, 300);
+    } else {
+        container.innerHTML = '<p>Sistema Consciente carregando...</p>';
+    }
 }
 
 // Generate Sets Tracker
