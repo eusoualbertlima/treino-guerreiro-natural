@@ -7,23 +7,35 @@ const TrackingSystem = {
     },
 
     // Save workout completion
-    saveWorkout(day, exercises) {
+    async saveWorkout(day, exercises) {
         const history = this.getWorkoutHistory();
         const today = new Date().toISOString().split('T')[0];
 
-        history.push({
+        const newEntry = {
             date: today,
             day: day,
             exercises: exercises,
-            completed: true
-        });
+            completed: true,
+            timestamp: Date.now()
+        };
+
+        history.push(newEntry);
 
         // Save to main storage
         localStorage.setItem('workoutHistory', JSON.stringify(history));
 
+        // Save to Cloud (Firebase)
+        if (window.DataSync) {
+            try {
+                await DataSync.saveWorkout(newEntry);
+                console.log('✅ Treino sincronizado na nuvem!');
+            } catch (e) {
+                console.warn('⚠️ Cloud sync failed for workout, saved locally.', e);
+            }
+        }
+
         // AUTOMATIC BACKUP - Save redundant copy
         this.createAutoBackup();
-
         this.updateStats();
     },
 

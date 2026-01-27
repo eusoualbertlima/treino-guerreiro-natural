@@ -386,6 +386,11 @@ function renderPreWorkoutState() {
 
             ${hacksHtml}
             
+            <div class="state-section" style="margin-top: 15px;">
+                <input type="text" id="customHackInput" placeholder="✨ Outro hack? (Ex: Jejum, Café com Óleo de Coco...)" 
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: rgba(0,0,0,0.2); color: #fff;">
+            </div>
+            
             <button class="btn btn-primary btn-lg" onclick="proceedToWorkout()" style="width: 100%; margin-top: 20px;">
                 ▶️ Ver Treino do Dia
             </button>
@@ -411,26 +416,43 @@ function setTodayState(field, value) {
 async function proceedToWorkout() {
     // 1. Capture Checked Hacks & Log them
     const checkedHacks = document.querySelectorAll('.hack-check:checked');
-    if (checkedHacks.length > 0 && window.logExperimentToday) {
-        let loggedCount = 0;
-        console.log(`📝 Registrando ${checkedHacks.length} hacks pré-treino...`);
+    const customHack = document.getElementById('customHackInput')?.value;
 
+    let loggedCount = 0;
+
+    if ((checkedHacks.length > 0 || customHack) && window.logExperimentToday) {
+        console.log(`📝 Registrando hacks pré-treino...`);
+
+        // Log checked hacks
         for (const checkbox of checkedHacks) {
-            // Log as experiment (since hacks are treated as experiments)
-            // Note: Experiment ID for hacks usually includes 'hack_' prefix, e.g. 'hack_mel_pretreino'
-            // The value in definition is just ID 'mel_pretreino', so we might need to adjust matching
-
-            // Try to log directly if function assumes ID
             try {
-                // If the experiment doesn't exist in 'My Experiments', we might want to auto-start it?
-                // For now, let's just assume we log it if it's "active" or simply log as note
                 await logExperimentToday(checkbox.value);
                 loggedCount++;
             } catch (e) {
                 console.warn('Hack log warning:', e);
             }
         }
-        if (loggedCount > 0) showSuccess(`✅ ${loggedCount} Hacks Pré-Treino Registrados!`);
+
+        // Log custom hack
+        if (customHack && customHack.trim() !== '') {
+            try {
+                // Generate a temp ID for the custom hack
+                const hackId = `custom_${Date.now()}`;
+                // We fake an experiment log specifically for this string
+                await logExperimentToday({
+                    id: hackId,
+                    name: customHack,
+                    type: 'custom_hack',
+                    logged: true
+                });
+                loggedCount++;
+                console.log('📝 Custom hack logged:', customHack);
+            } catch (e) {
+                console.warn('Custom hack log failed', e);
+            }
+        }
+
+        if (loggedCount > 0) showSuccess(`✅ ${loggedCount} Hacks/Rituais Registrados!`);
     }
 
     // 2. Load Workout
