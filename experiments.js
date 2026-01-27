@@ -224,10 +224,42 @@ const ExperimentsSystem = {
 
     // Initialize experiments
     async init() {
-        if (window.DataSync) {
-            this.experiments = await DataSync.getExperiments();
+        try {
+            // Verifica se está logado E se CloudSync está inicializado com userRef
+            const isFirebaseReady = window.CloudSync && 
+                                     window.CloudSync.userRef && 
+                                     window.DataSync;
+            
+            if (isFirebaseReady) {
+                console.log('🔄 Carregando experimentos do Firebase...');
+                try {
+                    this.experiments = await DataSync.getExperiments() || [];
+                    console.log('✅ Experimentos carregados do Firebase:', this.experiments.length);
+                } catch (firebaseError) {
+                    console.warn('⚠️ Erro ao carregar do Firebase, usando local:', firebaseError);
+                    const saved = localStorage.getItem('experiments');
+                    this.experiments = saved ? JSON.parse(saved) : [];
+                }
+            } else {
+                // Modo offline: carrega do localStorage
+                console.log('📴 Modo offline detectado, carregando experimentos locais...');
+                const saved = localStorage.getItem('experiments');
+                this.experiments = saved ? JSON.parse(saved) : [];
+                console.log('📴 Experimentos carregados offline:', this.experiments.length);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar experimentos:', error);
+            // Fallback para localStorage em caso de erro
+            const saved = localStorage.getItem('experiments');
+            this.experiments = saved ? JSON.parse(saved) : [];
+            console.log('⚠️ Fallback para localStorage:', this.experiments.length);
         }
         return this.experiments;
+    },
+
+    // Salvar localmente
+    saveLocal() {
+        localStorage.setItem('experiments', JSON.stringify(this.experiments));
     },
 
     // Start a new experiment
@@ -244,9 +276,12 @@ const ExperimentsSystem = {
 
         this.experiments.push(experiment);
 
-        if (window.DataSync) {
+        if (window.DataSync && window.DataSync.user) {
             await DataSync.saveExperiment(experiment);
         }
+
+        // Salvar localmente também (backup/offline)
+        this.saveLocal();
 
         return experiment;
     },

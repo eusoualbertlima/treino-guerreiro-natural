@@ -84,8 +84,71 @@ async function signInWithGoogle() {
     } catch (error) {
         console.error('❌ Google sign in error:', error);
         hideLoading();
-        showError('Erro ao entrar com Google. Tente novamente.');
+
+        // Oferecer modo offline em caso de erro
+        if (error.code === 'auth/unauthorized-domain' || error.code === 'auth/popup-blocked') {
+            showOfflinePrompt();
+        } else {
+            showError('Erro ao entrar com Google. Tente novamente.');
+        }
         return null;
+    }
+}
+
+// Modo Offline - pular login
+function enterOfflineMode() {
+    console.log('📴 Entrando em modo offline...');
+
+    // Esconder tela de login e mostrar app
+    hideLoginScreen();
+
+    // Atualizar UI
+    const userNameEl = document.getElementById('userName');
+    if (userNameEl) {
+        userNameEl.textContent = 'Modo Offline';
+    }
+
+    // Adicionar badge visual
+    const badge = document.createElement('div');
+    badge.className = 'offline-badge';
+    badge.innerHTML = '📴 Offline';
+    badge.style.cssText = 'position:fixed; top:50px; right:10px; background:#f59e0b; color:black; padding:5px 10px; border-radius:12px; font-size:11px; z-index:1000; font-weight:bold;';
+    document.body.appendChild(badge);
+
+    showSuccess('Modo offline ativado! Seus dados serão salvos localmente.');
+}
+
+// Mostrar prompt para modo offline
+function showOfflinePrompt() {
+    const loginScreen = document.getElementById('loginScreen');
+    if (!loginScreen) return;
+
+    // Adicionar mensagem de erro e botão offline
+    let errorMsg = loginScreen.querySelector('.login-error');
+    if (!errorMsg) {
+        errorMsg = document.createElement('div');
+        errorMsg.className = 'login-error';
+        errorMsg.innerHTML = `
+            <p style="color:#ef4444; margin:15px 0;">Erro ao entrar com Google. Tente novamente.</p>
+            <button onclick="enterOfflineMode()" class="offline-btn" style="
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1rem;
+                margin-top: 10px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                justify-content: center;
+                width: 100%;
+            ">
+                📴 Entrar sem conta (Modo Offline)
+            </button>
+        `;
+        loginScreen.querySelector('.login-container').appendChild(errorMsg);
     }
 }
 
@@ -216,6 +279,20 @@ function showLoginScreen() {
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     Entrar com Google
+                </button>
+                
+                <button onclick="enterOfflineMode()" class="offline-signin-btn" style="
+                    background: transparent;
+                    color: #888;
+                    border: 1px solid #444;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    margin-top: 15px;
+                    width: 100%;
+                ">
+                    📴 Usar sem conta (offline)
                 </button>
                 
                 <p class="login-note">
