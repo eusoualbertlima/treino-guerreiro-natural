@@ -226,17 +226,27 @@ const ExperimentsSystem = {
     async init() {
         try {
             // Verifica se está logado E se CloudSync está inicializado com userRef
-            const isFirebaseReady = window.CloudSync && 
-                                     window.CloudSync.userRef && 
-                                     window.DataSync;
-            
+            const isFirebaseReady = window.CloudSync &&
+                window.CloudSync.userRef &&
+                window.DataSync;
+
             if (isFirebaseReady) {
                 console.log('🔄 Carregando experimentos do Firebase...');
                 try {
-                    this.experiments = await DataSync.getExperiments() || [];
+                    // CRIA UM TIMEOUT DE 5 SEGUNDOS
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Timeout Firebase')), 5000)
+                    );
+
+                    // Tenta carregar do Firebase, mas desiste se demorar mais de 5s
+                    this.experiments = await Promise.race([
+                        DataSync.getExperiments(),
+                        timeoutPromise
+                    ]) || [];
+
                     console.log('✅ Experimentos carregados do Firebase:', this.experiments.length);
                 } catch (firebaseError) {
-                    console.warn('⚠️ Erro ao carregar do Firebase, usando local:', firebaseError);
+                    console.warn('⚠️ Erro/Timeout ao carregar do Firebase, usando local:', firebaseError);
                     const saved = localStorage.getItem('experiments');
                     this.experiments = saved ? JSON.parse(saved) : [];
                 }
@@ -254,6 +264,11 @@ const ExperimentsSystem = {
             this.experiments = saved ? JSON.parse(saved) : [];
             console.log('⚠️ Fallback para localStorage:', this.experiments.length);
         }
+
+        // Remove loading state if UI element exists
+        const loadingEl = document.querySelector('.loading-placeholder');
+        if (loadingEl) loadingEl.style.display = 'none';
+
         return this.experiments;
     },
 
