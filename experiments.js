@@ -313,6 +313,9 @@ const ExperimentsSystem = {
         const experiment = this.experiments.find(e => e.id === experimentId);
         if (!experiment) return null;
 
+        // Ensure dailyLogs exists
+        if (!experiment.dailyLogs) experiment.dailyLogs = {};
+
         experiment.dailyLogs[date] = {
             ...data,
             timestamp: Date.now()
@@ -324,8 +327,22 @@ const ExperimentsSystem = {
             experiment.completedAt = Date.now();
         }
 
+        // Save locally first (Optimistic)
+        localStorage.setItem('experiments', JSON.stringify(this.experiments));
+
+        // Try to save to cloud (Fire & Forget style)
         if (window.DataSync) {
-            await DataSync.saveExperiment(experiment);
+            try {
+                // Timeout of 3s for save
+                const savePromise = DataSync.saveExperiment(experiment);
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Save Timeout')), 3000)
+                );
+
+                await Promise.race([savePromise, timeoutPromise]);
+            } catch (e) {
+                console.warn('⚠️ Cloud save failed/timeout, but local save ok', e);
+            }
         }
 
         return experiment;
