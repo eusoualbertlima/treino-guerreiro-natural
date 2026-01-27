@@ -424,6 +424,11 @@ function showTab(tabName) {
             container.innerHTML = renderDashboard();
         }
     }
+
+    // Initialize Conscious Training for treino tab
+    if (tabName === 'treino' && typeof initConsciousTraining !== 'undefined') {
+        initConsciousTraining();
+    }
 }
 
 // Day Selection

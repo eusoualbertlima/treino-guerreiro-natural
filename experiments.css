@@ -1,0 +1,456 @@
+/* Experiments System Styles */
+
+.experiments-screen {
+    padding: 0 15px 100px;
+}
+
+.experiments-header {
+    text-align: center;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+.experiments-header h2 {
+    font-size: 1.5rem;
+    margin: 0 0 5px;
+    background: linear-gradient(90deg, #9C27B0, #E91E63);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.experiments-header p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Active Experiments */
+.active-experiments {
+    margin-bottom: 30px;
+}
+
+.active-experiments h3,
+.preset-experiments h3,
+.custom-experiment-section h3 {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin: 0 0 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.no-experiments {
+    text-align: center;
+    padding: 30px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.no-experiments p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.no-experiments .hint {
+    font-size: 0.85rem;
+    margin-top: 8px;
+}
+
+/* Experiment Cards */
+.experiments-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.experiment-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 15px;
+    border-left: 4px solid var(--accent-primary);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.experiment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.experiment-card.active {
+    background: linear-gradient(135deg, var(--card-bg), rgba(156, 39, 176, 0.1));
+}
+
+.experiment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.experiment-header h4 {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+}
+
+.experiment-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.experiment-badge.active {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.experiment-duration {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.experiment-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 12px;
+    line-height: 1.4;
+}
+
+.experiment-hypothesis {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.experiment-hypothesis strong {
+    color: var(--text-primary);
+}
+
+.experiment-hypothesis-preview {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin: 10px 0 15px;
+}
+
+/* Progress Bar */
+.experiment-progress {
+    margin-bottom: 15px;
+}
+
+.experiment-progress .progress-bar {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.experiment-progress .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #9C27B0, #E91E63);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Experiment Actions */
+.experiment-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.experiment-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary {
+    background: var(--accent-primary);
+    border: none;
+    color: white;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.btn-start-experiment {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #9C27B0, #E91E63);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-start-experiment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
+}
+
+/* Custom Experiment Section */
+.custom-experiment-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.btn-create-experiment {
+    padding: 15px 30px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-create-experiment:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+/* Experiment Modal Styles */
+.experiment-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-box {
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-box .stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent-primary);
+}
+
+.stat-box .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.experiment-info {
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.experiment-info h4 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 8px;
+}
+
+.experiment-info p {
+    margin: 0;
+    color: var(--text-primary);
+    font-style: italic;
+}
+
+.experiment-logs h4 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+}
+
+.logs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.logs-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.logs-list li:last-child {
+    border-bottom: none;
+}
+
+.log-date {
+    color: var(--text-primary);
+}
+
+.log-status {
+    color: #4CAF50;
+}
+
+.no-logs {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 20px;
+}
+
+.experiment-actions-modal {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.btn-danger {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: #F44336;
+    color: white;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.btn-primary.full-width {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #9C27B0, #E91E63);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Modal Base Styles (shared) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal {
+    background: var(--card-bg);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 20px;
+}

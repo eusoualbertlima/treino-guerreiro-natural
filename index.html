@@ -6,19 +6,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>💪 Sistema Guerreiro Natural - Albert</title>
+    <title>🧪 Laboratório Pessoal - Albert</title>
+
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="save-button.css">
     <link rel="stylesheet" href="last-workout.css">
     <link rel="stylesheet" href="workout-builder.css">
+    <link rel="stylesheet" href="checkin.css">
+    <link rel="stylesheet" href="experiments.css">
+    <link rel="stylesheet" href="affirmations.css">
+    <link rel="stylesheet" href="conscious-training.css">
+
+    <!-- Firebase SDK (free Spark plan) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <!-- App Scripts (order matters) -->
+    <script src="firebase-config.js"></script>
+    <script src="sync.js"></script>
     <script src="tracking.js"></script>
+    <script src="checkin.js"></script>
+    <script src="experiments.js"></script>
+    <script src="affirmations.js"></script>
+    <script src="conscious-training.js"></script>
+    <script src="natural-hacks.js"></script>
 </head>
 
 <body>
     <!-- Header -->
     <header class="header">
-        <h1>💪 Guerreiro Natural</h1>
+        <div class="header-left">
+            <img id="userPhoto" src="" alt="" class="user-photo" style="display:none">
+            <div>
+                <h1>🧪 Laboratório Pessoal</h1>
+                <span id="userName" class="user-name"></span>
+            </div>
+        </div>
         <div class="stats">
             <span id="currentWeight">68kg</span>
             <span class="arrow">→</span>
@@ -28,18 +54,30 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Tabs Navigation -->
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('treino')">­🏋️ Treino</button>
-            <button class="tab" onclick="showTab('nutricao')">🥩 Nutrição</button>
-            <button class="tab" onclick="showTab('progresso')">📊 Progresso</button>
+        <!-- Tabs Navigation - Hidden, using bottom nav -->
+        <div class="tabs" style="display:none">
+            <button class="tab" onclick="showTab('checkin')">🌅 Check-in</button>
+            <button class="tab active" onclick="showTab('treino')">🏋️ Treino</button>
+            <button class="tab" onclick="showTab('experiments')">🧪 Experimentos</button>
             <button class="tab" onclick="showTab('dashboard')">📈 Dashboard</button>
+        </div>
+
+        <!-- Check-in Tab (NEW) -->
+        <div id="checkin" class="tab-content">
+            <div id="checkin-content">
+                <!-- Check-in form will be loaded here -->
+            </div>
         </div>
 
         <!-- Treino Tab -->
         <div id="treino" class="tab-content active">
-                        <div class="workout-builder-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 10px;"><h3 style="margin: 0; font-size: 1.1rem;">Treino por Dia</h3><button class="btn btn-primary btn-sm" onclick="openTemplateManager()" style="padding: 8px 15px; font-size: 0.9rem;">⚙️ Montar Treinos</button></div>
-<div class="day-selector">
+            <div class="workout-builder-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 0 10px;">
+                <h3 style="margin: 0; font-size: 1.1rem;">Treino por Dia</h3><button class="btn btn-primary btn-sm"
+                    onclick="openTemplateManager()" style="padding: 8px 15px; font-size: 0.9rem;">⚙️ Montar
+                    Treinos</button>
+            </div>
+            <div class="day-selector">
                 <button class="day-btn" onclick="selectDay('seg')">SEG</button>
                 <button class="day-btn" onclick="selectDay('ter')">TER</button>
                 <button class="day-btn" onclick="selectDay('qua')">QUA</button>
@@ -68,12 +106,12 @@
                             <small>Picanha, Fraldinha</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒìù</span>
+                            <span class="emoji">🍗</span>
                             <p>Frango com Pele</p>
                             <small>Coxa, Sobrecoxa</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒÉƒ</span>
+                            <span class="emoji">🐟</span>
                             <p>Peixes Gordos</p>
                             <small>Salmão, Sardinha</small>
                         </div>
@@ -83,7 +121,7 @@
                             <small>6-8 por dia</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒºÇ</span>
+                            <span class="emoji">🧀</span>
                             <p>Queijos</p>
                             <small>Mussarela, Prato</small>
                         </div>
@@ -99,24 +137,24 @@
                             <small>200-300g/refeição</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒÑö</span>
+                            <span class="emoji">🍠</span>
                             <p>Batata Doce</p>
                             <small>300-400g</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒìî</span>
+                            <span class="emoji">🍌</span>
                             <p>Bananas</p>
                             <small>3-5 por dia</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒî¥</span>
+                            <span class="emoji">🌾</span>
                             <p>Aveia</p>
-                            <small>Natural, não instantónea</small>
+                            <small>Natural, não instantânea</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒì»</span>
+                            <span class="emoji">🍯</span>
                             <p>Mel</p>
-                            <small>P├│s-treino</small>
+                            <small>Pós-treino</small>
                         </div>
                     </div>
                 </div>
@@ -125,22 +163,22 @@
                     <h3>🥑 Gorduras Saudáveis</h3>
                     <div class="food-grid">
                         <div class="food-item">
-                            <span class="emoji">­ƒÑÑ</span>
-                            <p>Ôleo de Coco</p>
+                            <span class="emoji">🥥</span>
+                            <p>Óleo de Coco</p>
                             <small>2-3 colheres/dia</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒ½Æ</span>
+                            <span class="emoji">🫒</span>
                             <p>Azeite Extra Virgem</p>
                             <small>Saladas</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒÑ£</span>
+                            <span class="emoji">🥜</span>
                             <p>Castanhas</p>
                             <small>1 punhado/dia</small>
                         </div>
                         <div class="food-item">
-                            <span class="emoji">­ƒºê</span>
+                            <span class="emoji">🧈</span>
                             <p>Manteiga/Ghee</p>
                             <small>Natural</small>
                         </div>
@@ -157,35 +195,35 @@
                             <li>2 bananas</li>
                             <li>3 ovos crus (pasteurizados)</li>
                             <li>2 colheres mel</li>
-                            <li>1 colher ├│leo de coco</li>
+                            <li>1 colher óleo de coco</li>
                             <li>Canela a gosto</li>
                         </ul>
                         <p class="hack-tip">💡 Tomar 2x ao dia entre refeições</p>
                     </div>
 
                     <div class="hack-card">
-                        <h3>☕ Cafè da Manhã Bomba</h3>
+                        <h3>☕ Café da Manhã Bomba</h3>
                         <p class="hack-cal">1.000 kcal</p>
                         <ul>
                             <li>6 ovos mexidos com queijo</li>
-                            <li>2-3 colheres ├│leo de coco</li>
+                            <li>2-3 colheres óleo de coco</li>
                             <li>2 bananas + mel</li>
                             <li>100g queijo</li>
                         </ul>
-                        <p class="hack-tip">💡 P├│s-treino CRÍTICO (30min)</p>
+                        <p class="hack-tip">💡 Pós-treino CRÍTICO (30min)</p>
                     </div>
 
                     <div class="hack-card">
-                        <h3>🏋️ Densidade Cal├│rica</h3>
+                        <h3>🏋️ Densidade Calórica</h3>
                         <p class="hack-cal">+500 kcal sem volume</p>
                         <ul>
                             <li>Azeite extra nas saladas</li>
-                            <li>Ôleo de coco em tudo</li>
+                            <li>Óleo de coco em tudo</li>
                             <li>NUNCA jogue gemas fora</li>
                             <li>Carnes gordas > magras</li>
                             <li>Frango COM pele</li>
                         </ul>
-                        <p class="hack-tip">💡 1 colher sopa ├│leo = 120 kcal</p>
+                        <p class="hack-tip">💡 1 colher sopa óleo = 120 kcal</p>
                     </div>
                 </div>
 
@@ -195,7 +233,7 @@
                         <h4>5h00 - Treino Jejum</h4>
                     </div>
                     <div class="meal">
-                        <h4>6h30 - P├│s-Treino (700 kcal)</h4>
+                        <h4>6h30 - Pós-Treino (700 kcal)</h4>
                         <p>6 ovos + queijo + 2 bananas + mel</p>
                     </div>
                     <div class="meal">
@@ -288,107 +326,225 @@
                 </div>
             </div>
         </div>
+
+        <!-- Experiments/Lab Tab -->
+        <div id="experiments" class="tab-content">
+            <div id="experiments-content">
+                <!-- Experiments will be loaded here by JavaScript -->
+                <div class="loading-placeholder">
+                    <p>🔄 Carregando experimentos...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Afirmações Tab -->
+        <div id="affirmations-tab" class="tab-content">
+            <div id="affirmations-content">
+                <!-- Affirmations will be loaded here -->
+            </div>
+        </div>
     </main>
 
-<!-- Template Manager Modal -->
-<div id="templateManagerModal" class="modal-overlay hidden">
-    <div class="modal modal-lg">
-        <div class="modal-header">
-            <h3 class="modal-title">🏋️ Meus Treinos</h3>
-            <button class="modal-close" id="closeTemplateManager">×</button>
-        </div>
-        <button class="btn btn-primary mb-3" onclick="openCreateTemplate()" style="width: 100%;">
-            ➕ Criar Novo Treino
-        </button>
-        <div id="templatesList" class="templates-grid">
-            <!-- Templates will be dynamically generated -->
+    <!-- Template Manager Modal -->
+    <div id="templateManagerModal" class="modal-overlay hidden">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">🏋️ Meus Treinos</h3>
+                <button class="modal-close" id="closeTemplateManager">×</button>
+            </div>
+            <button class="btn btn-primary mb-3" onclick="openCreateTemplate()" style="width: 100%;">
+                ➕ Criar Novo Treino
+            </button>
+            <div id="templatesList" class="templates-grid">
+                <!-- Templates will be dynamically generated -->
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Create/Edit Template Modal -->
-<div id="createTemplateModal" class="modal-overlay hidden">
-    <div class="modal modal-xl">
-        <div class="modal-header">
-            <h3 class="modal-title">📋 Montar Treino</h3>
-            <button class="modal-close" id="closeCreateTemplate">×</button>
+    <!-- Create/Edit Template Modal -->
+    <div id="createTemplateModal" class="modal-overlay hidden">
+        <div class="modal modal-xl">
+            <div class="modal-header">
+                <h3 class="modal-title">📋 Montar Treino</h3>
+                <button class="modal-close" id="closeCreateTemplate">×</button>
+            </div>
+
+            <div class="template-builder">
+                <!-- Template Name -->
+                <div class="input-group mb-3">
+                    <label class="input-label">Nome do Treino</label>
+                    <input type="text" class="input" id="templateName" placeholder="Ex: Treino A - Peito e Tríceps">
+                </div>
+
+                <div class="builder-layout">
+                    <!-- Left: Exercise Library -->
+                    <div class="library-section">
+                        <h4 class="section-subtitle">📚 Biblioteca de Exercícios</h4>
+                        <div id="muscleFilters" class="muscle-filters">
+                            <!-- Filters will be dynamically generated -->
+                        </div>
+                        <div id="exerciseLibraryList" class="exercise-library">
+                            <!-- Exercises will be dynamically generated -->
+                        </div>
+                    </div>
+
+                    <!-- Right: Selected Exercises -->
+                    <div class="selected-section">
+                        <h4 class="section-subtitle">✅ Exercícios do Treino</h4>
+                        <div id="selectedExercisesList" class="selected-exercises">
+                            <!-- Selected exercises will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-lg" id="btnSaveTemplate" style="width: 100%; margin-top: 20px;">
+                    💾 Salvar Treino
+                </button>
+            </div>
         </div>
+    </div>
 
-        <div class="template-builder">
-            <!-- Template Name -->
-            <div class="input-group mb-3">
-                <label class="input-label">Nome do Treino</label>
-                <input type="text" class="input" id="templateName" placeholder="Ex: Treino A - Peito e Tríceps">
+    <!-- Workout Execution Modal -->
+    <div id="workoutExecutionModal" class="modal-overlay hidden">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">▶️ <span id="executionTemplateName">Treino</span></h3>
+                <button class="modal-close" id="closeWorkoutExecution">×</button>
             </div>
 
-            <div class="builder-layout">
-                <!-- Left: Exercise Library -->
-                <div class="library-section">
-                    <h4 class="section-subtitle">📚 Biblioteca de Exercícios</h4>
-                    <div id="muscleFilters" class="muscle-filters">
-                        <!-- Filters will be dynamically generated -->
-                    </div>
-                    <div id="exerciseLibraryList" class="exercise-library">
-                        <!-- Exercises will be dynamically generated -->
-                    </div>
-                </div>
-
-                <!-- Right: Selected Exercises -->
-                <div class="selected-section">
-                    <h4 class="section-subtitle">✅ Exercícios do Treino</h4>
-                    <div id="selectedExercisesList" class="selected-exercises">
-                        <!-- Selected exercises will be dynamically generated -->
-                    </div>
-                </div>
+            <div id="workoutExecutionContent" class="workout-execution">
+                <!-- Exercises will be dynamically generated -->
             </div>
 
-            <button class="btn btn-primary btn-lg" id="btnSaveTemplate" style="width: 100%; margin-top: 20px;">
-                💾 Salvar Treino
+            <button class="btn btn-primary btn-lg" id="btnCompleteWorkout" style="width: 100%; margin-top: 20px;">
+                ✅ Completar Treino
             </button>
         </div>
     </div>
-</div>
 
-<!-- Workout Execution Modal -->
-<div id="workoutExecutionModal" class="modal-overlay hidden">
-    <div class="modal modal-lg">
-        <div class="modal-header">
-            <h3 class="modal-title">▶️ <span id="executionTemplateName">Treino</span></h3>
-            <button class="modal-close" id="closeWorkoutExecution">×</button>
-        </div>
-
-        <div id="workoutExecutionContent" class="workout-execution">
-            <!-- Exercises will be dynamically generated -->
-        </div>
-
-        <button class="btn btn-primary btn-lg" id="btnCompleteWorkout" style="width: 100%; margin-top: 20px;">
-            ✅ Completar Treino
-        </button>
-    </div>
-</div>
-
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation (Redesigned) -->
     <nav class="bottom-nav">
+        <button class="nav-btn" onclick="showTab('checkin')">
+            <span class="icon">🌅</span>
+            <span class="label">Check-in</span>
+        </button>
         <button class="nav-btn active" onclick="showTab('treino')">
-            <span class="icon">­🏋️</span>
+            <span class="icon">🏋️</span>
             <span class="label">Treino</span>
+        </button>
+        <button class="nav-btn" onclick="showTab('experiments')">
+            <span class="icon">🧪</span>
+            <span class="label">Lab</span>
         </button>
         <button class="nav-btn" onclick="showTab('nutricao')">
             <span class="icon">🥩</span>
             <span class="label">Nutrição</span>
         </button>
-        <button class="nav-btn" onclick="showTab('progresso')">
-            <span class="icon">📊</span>
-            <span class="label">Progresso</span>
-        </button>
         <button class="nav-btn" onclick="showTab('dashboard')">
             <span class="icon">📈</span>
-            <span class="label">Dashboard</span>
+            <span class="label">Stats</span>
         </button>
     </nav>
 
-        <script src="workout-builder.js"></script>
-<script src="app.js"></script>
+    <script src="workout-builder.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Initialize Firebase and App -->
+    <script>
+        // Wait for DOM and Firebase to load
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize Firebase
+            if (window.FirebaseAuth) {
+                window.FirebaseAuth.init();
+            }
+
+            // Pre-initialize experiments system
+            if (window.ExperimentsSystem) {
+                await ExperimentsSystem.init();
+            }
+        });
+
+        // Extended showTab function for new tabs
+        const originalShowTab = window.showTab;
+        window.showTab = function (tabName) {
+            // Hide all tab contents first
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show the selected tab
+            const targetTab = document.getElementById(tabName);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+
+            // Call original function if it exists (for treino tab)
+            if (typeof originalShowTab === 'function' && tabName === 'treino') {
+                originalShowTab(tabName);
+            }
+
+            // Handle new tabs initialization
+            if (tabName === 'checkin') {
+                if (typeof initCheckinTab === 'function') initCheckinTab();
+            } else if (tabName === 'experiments') {
+                if (typeof initExperimentsTab === 'function') initExperimentsTab();
+            } else if (tabName === 'affirmations-tab') {
+                if (typeof initAffirmationsTab === 'function') initAffirmationsTab();
+            }
+
+            // Update bottom nav active state
+            document.querySelectorAll('.bottom-nav .nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('onclick')?.includes(tabName)) {
+                    btn.classList.add('active');
+                }
+            });
+        };
+
+        // Helper function for success messages
+        function showSuccess(message) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = 'toast-success';
+            toast.innerHTML = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #10B981, #059669);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 30px;
+                font-size: 0.9rem;
+                z-index: 9999;
+                animation: slideUp 0.3s ease;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function showError(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-error';
+            toast.innerHTML = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #EF4444, #DC2626);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 30px;
+                font-size: 0.9rem;
+                z-index: 9999;
+                animation: slideUp 0.3s ease;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
 </body>
 
 </html>
