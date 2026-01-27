@@ -136,7 +136,8 @@ const ConsciousTraining = {
     async init() {
         // Carregar último treino do storage
         if (window.DataSync) {
-            this.lastWorkout = await DataSync.getLastWorkout();
+            const workouts = await DataSync.getWorkouts();
+            this.lastWorkout = workouts.length > 0 ? workouts[0] : null;
         } else {
             const stored = localStorage.getItem('lastWorkout');
             if (stored) this.lastWorkout = JSON.parse(stored);
@@ -164,13 +165,39 @@ const ConsciousTraining = {
     // Obter treino do dia adaptado ao estado
     getTodayWorkout() {
         const days = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
-        const today = days[new Date().getDay()];
-        const workout = this.weekProgram[today];
+        const todayKey = days[new Date().getDay()];
+
+        let workout = this.weekProgram[todayKey];
+
+        // Tentar usar treinos detalhados do app.js (window.workouts)
+        if (window.workouts && window.workouts[todayKey]) {
+            const detalhado = window.workouts[todayKey];
+            console.log('⚡ Usando treino detalhado de app.js:', detalhado.name);
+
+            workout = {
+                id: todayKey,
+                name: detalhado.name,
+                focus: detalhado.focus,
+                duration: detalhado.duration,
+                isRest: todayKey === 'dom', // Domingo rest
+                exercises: detalhado.exercises.map((ex, i) => ({
+                    id: `ex_${todayKey}_${i}`,
+                    name: ex.name,
+                    muscle: ex.target || 'Geral',
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    tip: ex.notes || 'Foco na execução',
+                    rest: ex.rest,
+                    load: ex.load
+                }))
+            };
+        }
+
         const missedStatus = this.checkMissedDays();
 
         return {
             workout,
-            day: today,
+            day: todayKey,
             missedStatus,
             recommendation: this.getRecommendation(workout, missedStatus)
         };

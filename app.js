@@ -1,5 +1,6 @@
 // Workout Database
-const workouts = {
+// Workout Database
+window.workouts = {
     seg: {
         name: "LOWER A - Quad Dominante",
         duration: "70min",
@@ -438,8 +439,10 @@ function selectDay(day) {
     // Update day buttons
     document.querySelectorAll('.day-btn').forEach(btn => {
         btn.classList.remove('active');
+        if (btn.textContent.toLowerCase().includes(day) || btn.dataset.day === day) {
+            btn.classList.add('active');
+        }
     });
-    event.target.classList.add('active');
 
     // Load workout
     loadWorkout(day);
@@ -464,7 +467,12 @@ function loadWorkout(day) {
 
     // Use Conscious Training System
     if (typeof initConsciousTraining !== 'undefined') {
-        container.innerHTML = '<div class="loading-spinner">🧘 Conectando com sua intuição...</div>';
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px;">
+                <div class="loading-spinner"></div>
+                <p style="margin-top:15px; color:#888;">🧘 Conectando com sua intuição...</p>
+            </div>
+        `;
         setTimeout(() => {
             initConsciousTraining();
         }, 300);
