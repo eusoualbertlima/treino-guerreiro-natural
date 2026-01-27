@@ -347,7 +347,7 @@ const ExperimentsSystem = {
 
         const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
         const elapsedDays = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
-        const loggedDays = Object.keys(experiment.dailyLogs).length;
+        const loggedDays = Object.keys(experiment.dailyLogs || {}).length;
 
         return {
             totalDays,
