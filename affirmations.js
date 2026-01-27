@@ -297,15 +297,112 @@ function openAffirmationsModal() {
         <div class="modal modal-xl" style="max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
                 <h3>🗣️ Suas Afirmações</h3>
-                <button class="modal-close" onclick="document.getElementById('affirmationsModal').remove()">×</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-sm" onclick="renderEditAffirmationsUI()" style="padding:5px 10px; font-size:0.8rem;">✏️ Editar</button>
+                    <button class="modal-close" onclick="document.getElementById('affirmationsModal').remove()">×</button>
+                </div>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" id="affirmationsModalBody">
                 ${renderAffirmationsUI()}
             </div>
         </div>
     `;
     document.body.appendChild(modal);
 }
+
+// Mark affirmations as done in check-in
+async function markAffirmationsDone() {
+    if (window.CheckinSystem) {
+        await CheckinSystem.update('affirmations.did', true);
+
+        // Update UI button in checkin
+        const btn = document.getElementById('btnAffirmations');
+        if (btn) btn.classList.add('active');
+
+        showSuccess('🗣️ Afirmações registradas!');
+
+        // Close modal after 1s
+        setTimeout(() => {
+            const modal = document.getElementById('affirmationsModal');
+            if (modal) modal.remove();
+        }, 1000);
+    }
+}
+
+// Render Edit UI
+function renderEditAffirmationsUI() {
+    const container = document.getElementById('affirmationsModalBody');
+    if (!container) return;
+
+    // Flatten affirmations for editing (simple text area per category for now, or just one big JSON/Text?)
+    // Let's do a simple category selector to edit
+
+    let categoriesHtml = Object.keys(Affirmations.categories).map(key => {
+        const cat = Affirmations.categories[key];
+        const text = cat.affirmations.join('\n');
+        return `
+            <div class="edit-category" style="margin-bottom:20px;">
+                <h4 style="color:var(--accent-primary); margin-bottom:10px;">${cat.name}</h4>
+                <textarea id="edit_${key}" style="width:100%; height:150px; background:rgba(0,0,0,0.2); border:1px solid #333; color:#fff; padding:10px; border-radius:8px;">${text}</textarea>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="edit-mode">
+            <p style="color:#888; margin-bottom:20px;">Edite suas afirmações (uma por linha):</p>
+            ${categoriesHtml}
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button class="btn-primary" onclick="saveEditedAffirmations()">💾 Salvar Alterações</button>
+                <button class="btn-secondary" onclick="document.getElementById('affirmationsModal').remove(); openAffirmationsModal();">Cancelar</button>
+            </div>
+        </div>
+    `;
+}
+
+// Save edited affirmations
+function saveEditedAffirmations() {
+    try {
+        Object.keys(Affirmations.categories).forEach(key => {
+            const textarea = document.getElementById(`edit_${key}`);
+            if (textarea) {
+                const lines = textarea.value.split('\n').filter(line => line.trim() !== '');
+                Affirmations.categories[key].affirmations = lines;
+            }
+        });
+
+        // Save to localStorage
+        localStorage.setItem('customAffirmations', JSON.stringify(Affirmations.categories));
+
+        // Reload modal
+        const modal = document.getElementById('affirmationsModal');
+        if (modal) modal.remove();
+        openAffirmationsModal();
+
+        showSuccess('✅ Afirmações atualizadas!');
+    } catch (e) {
+        console.error('Error saving affirmations:', e);
+        alert('Erro ao salvar.');
+    }
+}
+
+// Load custom affirmations on init
+window.addEventListener('load', () => {
+    const saved = localStorage.getItem('customAffirmations');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            // Merge or replace? Replace seems safer for structure preservation if keys match
+            Object.keys(parsed).forEach(key => {
+                if (Affirmations.categories[key]) {
+                    Affirmations.categories[key].affirmations = parsed[key].affirmations;
+                }
+            });
+        } catch (e) {
+            console.error('Error loading custom affirmations', e);
+        }
+    }
+});
 
 // Export
 window.Affirmations = Affirmations;
