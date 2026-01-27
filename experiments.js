@@ -540,16 +540,33 @@ async function startPresetExperiment(presetId) {
 }
 
 async function logExperimentToday(experimentId) {
-    // Get today's checkin data as the log
-    const today = new Date().toISOString().split('T')[0];
-    const todayCheckin = CheckinSystem.todayData || await CheckinSystem.init();
+    try {
+        // Get today's checkin data as the log
+        const today = new Date().toISOString().split('T')[0];
 
-    await ExperimentsSystem.logProgress(experimentId, today, {
-        checkinData: todayCheckin,
-        logged: true
-    });
+        let todayCheckin = {};
+        try {
+            todayCheckin = CheckinSystem.todayData || await CheckinSystem.init() || {};
+        } catch (e) {
+            console.warn('⚠️ Could not load full checkin data, logging basic info only', e);
+        }
 
-    showSuccess('✅ Progresso registrado!');
+        await ExperimentsSystem.logProgress(experimentId, today, {
+            checkinData: todayCheckin,
+            logged: true,
+            timestamp: Date.now()
+        });
+
+        showSuccess('✅ Experimento registrado!');
+
+        // Refresh UI if possible
+        if (typeof renderExperimentsTab === 'function') {
+            setTimeout(renderExperimentsTab, 500);
+        }
+    } catch (error) {
+        console.error('Erro ao registrar experimento:', error);
+        alert('Erro ao registrar. Tente novamente offline.');
+    }
 }
 
 function viewExperimentDetails(experimentId) {

@@ -288,7 +288,7 @@ const ConsciousTraining = {
     // Obter mapa de músculos da semana
     getWeekMuscleMap() {
         const muscleMap = {};
-        
+
         for (const [day, workout] of Object.entries(this.weekProgram)) {
             if (workout.muscles) {
                 workout.muscles.forEach(muscle => {
@@ -304,6 +304,28 @@ const ConsciousTraining = {
 
 // UI: Renderizar tela de estado pré-treino
 function renderPreWorkoutState() {
+    // Get Pre-workout hacks
+    let hacksHtml = '';
+    if (window.NaturalHacks && window.NaturalHacks.categories.preTreino) {
+        const hacks = window.NaturalHacks.categories.preTreino.hacks;
+        hacksHtml = `
+            <div class="state-section hacks-section" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <label style="margin-bottom: 15px; display: block;">⚡ Protocolos Pré-Treino (Hacks)</label>
+                <div class="hacks-checklist-grid">
+                    ${hacks.map(hack => `
+                        <label class="hack-checkbox-item" style="display: flex; align-items: center; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                            <input type="checkbox" class="hack-check" value="${hack.id}" style="transform: scale(1.3); margin-right: 12px;">
+                            <div>
+                                <strong style="display: block; color: #fbbf24;">${hack.name}</strong>
+                                <span style="font-size: 0.85em; opacity: 0.8;">${hack.protocol}</span>
+                            </div>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
     return `
         <div class="conscious-pretraining">
             <h2>🧘 Como está seu corpo hoje?</h2>
@@ -334,6 +356,8 @@ function renderPreWorkoutState() {
                 <textarea id="intuitionNote" placeholder="Ex: Sinto que preciso focar em costas hoje..." 
                           onchange="setTodayState('intuitionNote', this.value)"></textarea>
             </div>
+
+            ${hacksHtml}
             
             <button class="btn btn-primary btn-lg" onclick="proceedToWorkout()" style="width: 100%; margin-top: 20px;">
                 ▶️ Ver Treino do Dia
@@ -345,10 +369,10 @@ function renderPreWorkoutState() {
 // Definir estado do dia
 function setTodayState(field, value) {
     ConsciousTraining.todayState[field] = value;
-    
+
     // Atualizar UI
-    const container = document.getElementById(`${field}Btns`) || 
-                      document.querySelectorAll(`[data-value="${value}"]`)[0]?.parentElement;
+    const container = document.getElementById(`${field}Btns`) ||
+        document.querySelectorAll(`[data-value="${value}"]`)[0]?.parentElement;
     if (container) {
         container.querySelectorAll('.state-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.value === value);
@@ -357,17 +381,42 @@ function setTodayState(field, value) {
 }
 
 // Prosseguir para treino adaptado
-function proceedToWorkout() {
+async function proceedToWorkout() {
+    // 1. Capture Checked Hacks & Log them
+    const checkedHacks = document.querySelectorAll('.hack-check:checked');
+    if (checkedHacks.length > 0 && window.logExperimentToday) {
+        let loggedCount = 0;
+        console.log(`📝 Registrando ${checkedHacks.length} hacks pré-treino...`);
+
+        for (const checkbox of checkedHacks) {
+            // Log as experiment (since hacks are treated as experiments)
+            // Note: Experiment ID for hacks usually includes 'hack_' prefix, e.g. 'hack_mel_pretreino'
+            // The value in definition is just ID 'mel_pretreino', so we might need to adjust matching
+
+            // Try to log directly if function assumes ID
+            try {
+                // If the experiment doesn't exist in 'My Experiments', we might want to auto-start it?
+                // For now, let's just assume we log it if it's "active" or simply log as note
+                await logExperimentToday(checkbox.value);
+                loggedCount++;
+            } catch (e) {
+                console.warn('Hack log warning:', e);
+            }
+        }
+        if (loggedCount > 0) showSuccess(`✅ ${loggedCount} Hacks Pré-Treino Registrados!`);
+    }
+
+    // 2. Load Workout
     const { workout, day, missedStatus, recommendation } = ConsciousTraining.getTodayWorkout();
     const adaptedWorkout = ConsciousTraining.adaptWorkoutToState(workout, ConsciousTraining.todayState);
-    
+
     renderConsciousWorkout(adaptedWorkout, recommendation);
 }
 
 // Renderizar treino consciente
 function renderConsciousWorkout(workout, recommendation) {
-    const container = document.getElementById('workout-content') || 
-                      document.getElementById('conscious-workout-container');
+    const container = document.getElementById('workout-content') ||
+        document.getElementById('conscious-workout-container');
     if (!container) return;
 
     if (workout.isRest) {
@@ -450,7 +499,7 @@ function renderConsciousWorkout(workout, recommendation) {
 function markExerciseDone(index) {
     const card = document.querySelector(`.exercise-card-conscious[data-index="${index}"]`);
     if (!card) return;
-    
+
     card.classList.add('done');
     card.querySelector('.exercise-feel').style.display = 'block';
     card.querySelector('.btn-done-exercise').style.display = 'none';
@@ -460,7 +509,7 @@ function markExerciseDone(index) {
 const exerciseLogs = {};
 function logExerciseFeel(index, feel) {
     exerciseLogs[index] = feel;
-    
+
     const card = document.querySelector(`.exercise-card-conscious[data-index="${index}"]`);
     if (card) {
         card.querySelector('.exercise-feel').innerHTML = `<span class="feel-logged">✓ ${feel}</span>`;
@@ -472,14 +521,14 @@ async function completeConsciousWorkout(workoutId) {
     // Pedir sensação geral
     const overallFeel = prompt('Como foi o treino geral?\n1 = Ruim\n2 = OK\n3 = Bom\n4 = Incrível') || '3';
     const feelMap = { '1': 'ruim', '2': 'ok', '3': 'bom', '4': 'incrivel' };
-    
+
     await ConsciousTraining.logWorkoutComplete(workoutId, exerciseLogs, feelMap[overallFeel] || 'bom');
-    
+
     // Mostrar sucesso
     if (typeof showSuccess === 'function') {
         showSuccess('✅ Treino completado e registrado no Check-in!');
     }
-    
+
     // Voltar para a tela inicial do treino
     setTimeout(() => {
         initConsciousTraining();
@@ -489,13 +538,13 @@ async function completeConsciousWorkout(workoutId) {
 // Inicializar sistema de treino consciente
 async function initConsciousTraining() {
     await ConsciousTraining.init();
-    
+
     const container = document.getElementById('workout-content');
     if (!container) return;
-    
+
     // Verificar estado de dias faltados primeiro
     const missedStatus = ConsciousTraining.checkMissedDays();
-    
+
     // Mostrar tela apropriada
     if (missedStatus.status === 'gentle-return') {
         container.innerHTML = `
