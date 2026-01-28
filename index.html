@@ -20,19 +20,19 @@
     <link rel="stylesheet" href="conscious-training.css">
 
     <!-- Firebase SDK (free Spark plan) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=2"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js?v=2"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js?v=2"></script>
 
     <!-- App Scripts (order matters) -->
-    <script src="firebase-config.js"></script>
-    <script src="sync.js"></script>
-    <script src="tracking.js"></script>
-    <script src="checkin.js"></script>
-    <script src="experiments.js"></script>
-    <script src="affirmations.js"></script>
-    <script src="conscious-training.js"></script>
-    <script src="natural-hacks.js"></script>
+    <script src="firebase-config.js?v=2"></script>
+    <script src="sync.js?v=2"></script>
+    <script src="tracking.js?v=2"></script>
+    <script src="checkin.js?v=2"></script>
+    <script src="experiments.js?v=2"></script>
+    <script src="affirmations.js?v=2"></script>
+    <script src="conscious-training.js?v=2"></script>
+    <script src="natural-hacks.js?v=2"></script>
 </head>
 
 <body>
@@ -41,7 +41,7 @@
         <div class="header-left">
             <img id="userPhoto" src="" alt="" class="user-photo" style="display:none">
             <div>
-                <h1>🧪 Laboratório Pessoal</h1>
+                <h1>🧪 Laboratório Pessoal <small style="font-size:0.5em; opacity:0.5">v2.0</small></h1>
                 <span id="userName" class="user-name"></span>
             </div>
         </div>
@@ -77,6 +77,8 @@
                     onclick="openTemplateManager()" style="padding: 8px 15px; font-size: 0.9rem;">⚙️ Montar
                     Treinos</button>
             </div>
+            <!-- Day selector removed as per user request -->
+            <!-- 
             <div class="day-selector">
                 <button class="day-btn" onclick="selectDay('seg')">SEG</button>
                 <button class="day-btn" onclick="selectDay('ter')">TER</button>
@@ -85,7 +87,8 @@
                 <button class="day-btn" onclick="selectDay('sex')">SEX</button>
                 <button class="day-btn" onclick="selectDay('sab')">SAB</button>
                 <button class="day-btn" onclick="selectDay('dom')">DOM</button>
-            </div>
+            </div> 
+            -->
 
             <div id="workout-content">
                 <!-- Workout will be loaded here -->
@@ -260,10 +263,41 @@
             </div>
         </div>
 
-        <!-- Dashboard Tab -->
+        <!-- Dashboard/Progresso Tab -->
         <div id="dashboard" class="tab-content">
-            <div id="dashboard-container">
-                <!-- Will be populated by JavaScript -->
+            <div class="progress-section">
+                <h2>📊 Seu Progresso</h2>
+
+                <div class="weight-card"
+                    style="background: #1f2937; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="margin-top:0; font-size:1rem; color:#9ca3af">Acompanhamento de Peso</h3>
+                    <div class="weight-input" style="display:flex; gap:10px; align-items:center; margin: 10px 0;">
+                        <label>Atual:</label>
+                        <input type="number" id="weightInput" value="68" step="0.1"
+                            style="width: 80px; padding: 5px; border-radius: 5px; border: 1px solid #374151; background: #111827; color: white;">
+                        kg
+                        <button onclick="updateWeight()" class="btn btn-sm btn-primary">Salvar</button>
+                    </div>
+
+                    <div class="goal-tracker">
+                        <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:5px;">
+                            <span>68kg</span>
+                            <span>Meta: 85kg</span>
+                        </div>
+                        <div class="progress-bar"
+                            style="height: 10px; background: #374151; border-radius: 5px; overflow: hidden;">
+                            <div class="progress-fill" id="progressBar"
+                                style="height: 100%; background: #10B981; width: 0%;"></div>
+                        </div>
+                        <p id="progressText" style="text-align:right; font-size:0.8rem; margin-top:5px; color:#9ca3af">
+                            0% completo</p>
+                    </div>
+                </div>
+
+                <!-- Dynamic Stats from tracking.js -->
+                <div id="dashboard-container">
+                    <!-- Will be populated by JavaScript -->
+                </div>
             </div>
         </div>
 
@@ -442,12 +476,12 @@
         </button>
         <button class="nav-btn" onclick="showTab('dashboard')">
             <span class="icon">📈</span>
-            <span class="label">Stats</span>
+            <span class="label">Progresso</span>
         </button>
     </nav>
 
-    <script src="workout-builder.js"></script>
-    <script src="app.js"></script>
+    <script src="workout-builder.js?v=2"></script>
+    <script src="app.js?v=2"></script>
 
     <!-- Initialize Firebase and App -->
     <script>
@@ -490,6 +524,12 @@
                 if (typeof initExperimentsTab === 'function') initExperimentsTab();
             } else if (tabName === 'affirmations-tab') {
                 if (typeof initAffirmationsTab === 'function') initAffirmationsTab();
+            } else if (tabName === 'dashboard') {
+                // Force dashboard render
+                if (typeof renderDashboard === 'function') {
+                    const container = document.getElementById('dashboard-container');
+                    if (container) container.innerHTML = renderDashboard();
+                }
             }
 
             // Update bottom nav active state

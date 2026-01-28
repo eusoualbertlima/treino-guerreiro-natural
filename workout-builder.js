@@ -568,6 +568,7 @@ window.startWorkoutFromTemplate = (templateId) => {
 };
 
 // Render workout execution
+// Render workout execution
 function renderWorkoutExecution(template) {
     const container = document.getElementById('workoutExecutionContent');
     if (!container) return;
@@ -578,9 +579,10 @@ function renderWorkoutExecution(template) {
         const exercise = exerciseLibrary.find(e => e.id === item.exerciseId);
         const muscleGroup = muscleGroups.find(g => g.id === exercise?.muscle);
 
-        // Get last weight used for this exercise
+        // Get last workout data for this exercise
         const lastWorkout = workoutHistory.find(w => w.exerciseId === item.exerciseId);
         const lastWeight = lastWorkout?.weight || '';
+        const lastReps = lastWorkout?.reps || '';
 
         return `
         <div class="execution-exercise" data-index="${index}">
@@ -596,14 +598,22 @@ function renderWorkoutExecution(template) {
             <p class="execution-description">${exercise?.description}</p>
             <div class="execution-config">
                 <div class="config-display">
-                    <span>📊 ${item.sets} séries × ${item.reps} reps</span>
+                    <span>📊 Meta: ${item.sets} x ${item.reps}</span>
                 </div>
-                <div class="weight-input">
-                    <label>Peso (kg)</label>
-                    <input type="number" class="input" id="weight-${index}" 
-                           value="${lastWeight}" placeholder="0"
-                           step="0.5">
-                    ${lastWeight ? `<small class="last-weight">Último: ${lastWeight}kg</small>` : ''}
+                <div class="input-row" style="display: flex; gap: 10px; margin-top: 10px;">
+                    <div class="weight-input" style="flex: 1;">
+                        <label>Carga (kg)</label>
+                        <input type="number" class="input" id="weight-${index}" 
+                               value="${lastWeight}" placeholder="Kg"
+                               step="0.5">
+                        ${lastWeight ? `<small class="last-weight">Ant: ${lastWeight}kg</small>` : ''}
+                    </div>
+                    <div class="reps-input" style="flex: 1;">
+                        <label>Reps Feitas</label>
+                        <input type="number" class="input" id="reps-${index}" 
+                               value="${lastReps || item.reps}" placeholder="Reps">
+                        ${lastReps ? `<small class="last-weight">Ant: ${lastReps}</small>` : ''}
+                    </div>
                 </div>
             </div>
         </div>
@@ -622,37 +632,55 @@ window.completeWorkout = () => {
     if (!template) return;
 
     const workoutDate = new Date().toISOString();
+    const savedExercises = [];
 
     // Save each exercise
     template.exercises.forEach((item, i) => {
         const exercise = exerciseLibrary.find(e => e.id === item.exerciseId);
         const weightInput = document.getElementById(`weight-${i}`);
+        const repsInput = document.getElementById(`reps-${i}`);
+
         const weight = weightInput?.value ? parseFloat(weightInput.value) : null;
+        const reps = repsInput?.value ? parseInt(repsInput.value) : item.reps; // Default to target if empty
 
-        const workoutEntry = {
-            id: 'workout_' + Date.now() + '_' + i,
-            exerciseId: item.exerciseId,
-            exerciseName: exercise?.name,
-            sets: item.sets,
-            reps: item.reps,
-            weight,
-            templateId,
-            templateName: template.name,
-            date: workoutDate
-        };
+        if (weight || reps) {
+            const workoutEntry = {
+                id: 'workout_' + Date.now() + '_' + i,
+                exerciseId: item.exerciseId,
+                exerciseName: exercise?.name,
+                sets: item.sets,
+                reps: reps, // Actual reps
+                targetReps: item.reps, // Target reps
+                weight: weight,
+                templateId,
+                templateName: template.name,
+                date: workoutDate
+            };
 
-        // Update or add to history
-        const existingIndex = workoutHistory.findIndex(w => w.exerciseId === item.exerciseId);
-        if (existingIndex >= 0 && weight) {
-            workoutHistory[existingIndex] = workoutEntry;
-        } else if (weight) {
-            workoutHistory.push(workoutEntry);
+            savedExercises.push(workoutEntry);
+
+            // Update or add to history
+            const existingIndex = workoutHistory.findIndex(w => w.exerciseId === item.exerciseId);
+            if (existingIndex >= 0) {
+                workoutHistory[existingIndex] = workoutEntry;
+            } else {
+                workoutHistory.push(workoutEntry);
+            }
         }
     });
 
     saveWorkoutHistory();
+
+    // Also save to global tracking system if available
+    if (window.TrackingSystem && window.TrackingSystem.saveWorkout) {
+        window.TrackingSystem.saveWorkout('custom', savedExercises);
+    }
+
     document.getElementById('workoutExecutionModal').classList.add('hidden');
-    alert('Treino completado com sucesso! 💪');
+    alert('Treino completado com sucesso! 💪\nDados salvos no histórico.');
+
+    // Refresh stats if needed
+    if (window.renderDashboard) window.renderDashboard();
 };
 
 // ========================================

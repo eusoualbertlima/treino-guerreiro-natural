@@ -136,7 +136,8 @@ const ConsciousTraining = {
     async init() {
         // Carregar último treino do storage
         if (window.DataSync) {
-            this.lastWorkout = await DataSync.getLastWorkout();
+            const workouts = await DataSync.getWorkouts();
+            this.lastWorkout = workouts.length > 0 ? workouts[0] : null;
         } else {
             const stored = localStorage.getItem('lastWorkout');
             if (stored) this.lastWorkout = JSON.parse(stored);
@@ -164,13 +165,39 @@ const ConsciousTraining = {
     // Obter treino do dia adaptado ao estado
     getTodayWorkout() {
         const days = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
-        const today = days[new Date().getDay()];
-        const workout = this.weekProgram[today];
+        const todayKey = days[new Date().getDay()];
+
+        let workout = this.weekProgram[todayKey];
+
+        // Tentar usar treinos detalhados do app.js (window.workouts)
+        if (window.workouts && window.workouts[todayKey]) {
+            const detalhado = window.workouts[todayKey];
+            console.log('⚡ Usando treino detalhado de app.js:', detalhado.name);
+
+            workout = {
+                id: todayKey,
+                name: detalhado.name,
+                focus: detalhado.focus,
+                duration: detalhado.duration,
+                isRest: todayKey === 'dom', // Domingo rest
+                exercises: detalhado.exercises.map((ex, i) => ({
+                    id: `ex_${todayKey}_${i}`,
+                    name: ex.name,
+                    muscle: ex.target || 'Geral',
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    tip: ex.notes || 'Foco na execução',
+                    rest: ex.rest,
+                    load: ex.load
+                }))
+            };
+        }
+
         const missedStatus = this.checkMissedDays();
 
         return {
             workout,
-            day: today,
+            day: todayKey,
             missedStatus,
             recommendation: this.getRecommendation(workout, missedStatus)
         };
@@ -288,7 +315,7 @@ const ConsciousTraining = {
     // Obter mapa de músculos da semana
     getWeekMuscleMap() {
         const muscleMap = {};
-        
+
         for (const [day, workout] of Object.entries(this.weekProgram)) {
             if (workout.muscles) {
                 workout.muscles.forEach(muscle => {
@@ -304,6 +331,28 @@ const ConsciousTraining = {
 
 // UI: Renderizar tela de estado pré-treino
 function renderPreWorkoutState() {
+    // Get Pre-workout hacks
+    let hacksHtml = '';
+    if (window.NaturalHacks && window.NaturalHacks.categories.preTreino) {
+        const hacks = window.NaturalHacks.categories.preTreino.hacks;
+        hacksHtml = `
+            <div class="state-section hacks-section" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <label style="margin-bottom: 15px; display: block;">⚡ Protocolos Pré-Treino (Hacks)</label>
+                <div class="hacks-checklist-grid">
+                    ${hacks.map(hack => `
+                        <label class="hack-checkbox-item" style="display: flex; align-items: center; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                            <input type="checkbox" class="hack-check" value="${hack.id}" style="transform: scale(1.3); margin-right: 12px;">
+                            <div>
+                                <strong style="display: block; color: #fbbf24;">${hack.name}</strong>
+                                <span style="font-size: 0.85em; opacity: 0.8;">${hack.protocol}</span>
+                            </div>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
     return `
         <div class="conscious-pretraining">
             <h2>🧘 Como está seu corpo hoje?</h2>
@@ -334,6 +383,13 @@ function renderPreWorkoutState() {
                 <textarea id="intuitionNote" placeholder="Ex: Sinto que preciso focar em costas hoje..." 
                           onchange="setTodayState('intuitionNote', this.value)"></textarea>
             </div>
+
+            ${hacksHtml}
+            
+            <div class="state-section" style="margin-top: 15px;">
+                <input type="text" id="customHackInput" placeholder="✨ Outro hack? (Ex: Jejum, Café com Óleo de Coco...)" 
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: rgba(0,0,0,0.2); color: #fff;">
+            </div>
             
             <button class="btn btn-primary btn-lg" onclick="proceedToWorkout()" style="width: 100%; margin-top: 20px;">
                 ▶️ Ver Treino do Dia
@@ -345,10 +401,10 @@ function renderPreWorkoutState() {
 // Definir estado do dia
 function setTodayState(field, value) {
     ConsciousTraining.todayState[field] = value;
-    
+
     // Atualizar UI
-    const container = document.getElementById(`${field}Btns`) || 
-                      document.querySelectorAll(`[data-value="${value}"]`)[0]?.parentElement;
+    const container = document.getElementById(`${field}Btns`) ||
+        document.querySelectorAll(`[data-value="${value}"]`)[0]?.parentElement;
     if (container) {
         container.querySelectorAll('.state-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.value === value);
@@ -357,17 +413,59 @@ function setTodayState(field, value) {
 }
 
 // Prosseguir para treino adaptado
-function proceedToWorkout() {
+async function proceedToWorkout() {
+    // 1. Capture Checked Hacks & Log them
+    const checkedHacks = document.querySelectorAll('.hack-check:checked');
+    const customHack = document.getElementById('customHackInput')?.value;
+
+    let loggedCount = 0;
+
+    if ((checkedHacks.length > 0 || customHack) && window.logExperimentToday) {
+        console.log(`📝 Registrando hacks pré-treino...`);
+
+        // Log checked hacks
+        for (const checkbox of checkedHacks) {
+            try {
+                await logExperimentToday(checkbox.value);
+                loggedCount++;
+            } catch (e) {
+                console.warn('Hack log warning:', e);
+            }
+        }
+
+        // Log custom hack
+        if (customHack && customHack.trim() !== '') {
+            try {
+                // Generate a temp ID for the custom hack
+                const hackId = `custom_${Date.now()}`;
+                // We fake an experiment log specifically for this string
+                await logExperimentToday({
+                    id: hackId,
+                    name: customHack,
+                    type: 'custom_hack',
+                    logged: true
+                });
+                loggedCount++;
+                console.log('📝 Custom hack logged:', customHack);
+            } catch (e) {
+                console.warn('Custom hack log failed', e);
+            }
+        }
+
+        if (loggedCount > 0) showSuccess(`✅ ${loggedCount} Hacks/Rituais Registrados!`);
+    }
+
+    // 2. Load Workout
     const { workout, day, missedStatus, recommendation } = ConsciousTraining.getTodayWorkout();
     const adaptedWorkout = ConsciousTraining.adaptWorkoutToState(workout, ConsciousTraining.todayState);
-    
+
     renderConsciousWorkout(adaptedWorkout, recommendation);
 }
 
 // Renderizar treino consciente
 function renderConsciousWorkout(workout, recommendation) {
-    const container = document.getElementById('workout-content') || 
-                      document.getElementById('conscious-workout-container');
+    const container = document.getElementById('workout-content') ||
+        document.getElementById('conscious-workout-container');
     if (!container) return;
 
     if (workout.isRest) {
@@ -417,11 +515,23 @@ function renderConsciousWorkout(workout, recommendation) {
                                 <p class="exercise-muscle">${ex.muscle}</p>
                             </div>
                             <div class="exercise-sets">
-                                <span>${ex.sets} x ${ex.reps}</span>
+                                <span>${ex.sets} séries</span>
                             </div>
                         </div>
                         <p class="exercise-tip">💡 ${ex.tip}</p>
-                        <div class="exercise-feel" style="display: none;">
+                        
+                        <div class="exercise-inputs" style="margin-top: 15px; display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.8rem; color: #aaa;">Carga (kg)</label>
+                                <input type="number" class="conscious-input-weight" id="conscious-weight-${i}" placeholder="kg" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.8rem; color: #aaa;">Reps Totais</label>
+                                <input type="number" class="conscious-input-reps" id="conscious-reps-${i}" placeholder="${ex.reps}" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                            </div>
+                        </div>
+
+                        <div class="exercise-feel" style="display: none; margin-top: 15px;">
                             <label>Como foi?</label>
                             <div class="feel-buttons">
                                 <button onclick="logExerciseFeel(${i}, 'fraco')">😕 Fraco</button>
@@ -430,7 +540,7 @@ function renderConsciousWorkout(workout, recommendation) {
                                 <button onclick="logExerciseFeel(${i}, 'incrivel')">🔥 Incrível</button>
                             </div>
                         </div>
-                        <button class="btn-done-exercise" onclick="markExerciseDone(${i})">
+                        <button class="btn-done-exercise" onclick="markExerciseDone(${i})" style="margin-top: 15px; width: 100%; padding: 10px;">
                             ✅ Feito
                         </button>
                     </div>
@@ -450,7 +560,7 @@ function renderConsciousWorkout(workout, recommendation) {
 function markExerciseDone(index) {
     const card = document.querySelector(`.exercise-card-conscious[data-index="${index}"]`);
     if (!card) return;
-    
+
     card.classList.add('done');
     card.querySelector('.exercise-feel').style.display = 'block';
     card.querySelector('.btn-done-exercise').style.display = 'none';
@@ -459,8 +569,8 @@ function markExerciseDone(index) {
 // Registrar sensação do exercício
 const exerciseLogs = {};
 function logExerciseFeel(index, feel) {
-    exerciseLogs[index] = feel;
-    
+    exerciseLogs[index] = { feel }; // Start object
+
     const card = document.querySelector(`.exercise-card-conscious[data-index="${index}"]`);
     if (card) {
         card.querySelector('.exercise-feel').innerHTML = `<span class="feel-logged">✓ ${feel}</span>`;
@@ -472,14 +582,34 @@ async function completeConsciousWorkout(workoutId) {
     // Pedir sensação geral
     const overallFeel = prompt('Como foi o treino geral?\n1 = Ruim\n2 = OK\n3 = Bom\n4 = Incrível') || '3';
     const feelMap = { '1': 'ruim', '2': 'ok', '3': 'bom', '4': 'incrivel' };
-    
-    await ConsciousTraining.logWorkoutComplete(workoutId, exerciseLogs, feelMap[overallFeel] || 'bom');
-    
+
+    // Collect data from inputs
+    const exerciseData = [];
+    const cards = document.querySelectorAll('.exercise-card-conscious');
+
+    cards.forEach((card, index) => {
+        const weight = card.querySelector(`#conscious-weight-${index}`)?.value;
+        const reps = card.querySelector(`#conscious-reps-${index}`)?.value;
+        const name = card.querySelector('h4').textContent;
+        const feel = exerciseLogs[index]?.feel || 'ok';
+
+        exerciseData.push({
+            name,
+            weight: weight || 0,
+            reps: reps || 0,
+            feel
+        });
+    });
+
+    await ConsciousTraining.logWorkoutComplete(workoutId, exerciseData, feelMap[overallFeel] || 'bom');
+
     // Mostrar sucesso
     if (typeof showSuccess === 'function') {
-        showSuccess('✅ Treino completado e registrado no Check-in!');
+        showSuccess('✅ Treino completado e registrado!');
+    } else {
+        alert('✅ Treino registrado!');
     }
-    
+
     // Voltar para a tela inicial do treino
     setTimeout(() => {
         initConsciousTraining();
@@ -489,13 +619,13 @@ async function completeConsciousWorkout(workoutId) {
 // Inicializar sistema de treino consciente
 async function initConsciousTraining() {
     await ConsciousTraining.init();
-    
+
     const container = document.getElementById('workout-content');
     if (!container) return;
-    
+
     // Verificar estado de dias faltados primeiro
     const missedStatus = ConsciousTraining.checkMissedDays();
-    
+
     // Mostrar tela apropriada
     if (missedStatus.status === 'gentle-return') {
         container.innerHTML = `

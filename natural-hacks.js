@@ -44,6 +44,15 @@ const NaturalHacks = {
                     benefits: ['Foco', 'Energia', 'Oxidação de gordura'],
                     protocol: '1-2 xícaras de café preto',
                     tip: 'Sem açúcar. Pode combinar com mel se treinar às 5h.'
+                },
+                {
+                    id: 'jejum_intermitente',
+                    name: '🌙 Jejum Intermitente',
+                    description: 'Treinar em jejum para GH e foco',
+                    when: 'Pular café da manhã ou jantar',
+                    benefits: ['Aumento de GH', 'Sensibilidade à insulina', 'Autofagia', 'Foco mental'],
+                    protocol: '12-16h sem comer antes do treino',
+                    tip: 'Beba muita água e café preto. Quebre o jejum com proteína.'
                 }
             ]
         },

@@ -251,13 +251,9 @@ function renderCheckinScreen() {
                         <span class="toggle-icon">🧘</span>
                         <span>Meditação</span>
                     </button>
-                    <button class="toggle-btn" id="btnAffirmations" onclick="toggleActivity('affirmations')">
+                    <button class="toggle-btn" id="btnAffirmations" onclick="openAffirmationsModal()">
                         <span class="toggle-icon">🗣️</span>
                         <span>Afirmações</span>
-                    </button>
-                    <button class="toggle-btn view-btn" onclick="openAffirmationsModal()">
-                        <span class="toggle-icon">📖</span>
-                        <span>Ver Afirmações</span>
                     </button>
                     <button class="toggle-btn" id="btnSun" onclick="toggleActivity('sun')">
                         <span class="toggle-icon">🌅</span>

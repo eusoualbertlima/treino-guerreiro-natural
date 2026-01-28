@@ -7,23 +7,35 @@ const TrackingSystem = {
     },
 
     // Save workout completion
-    saveWorkout(day, exercises) {
+    async saveWorkout(day, exercises) {
         const history = this.getWorkoutHistory();
         const today = new Date().toISOString().split('T')[0];
 
-        history.push({
+        const newEntry = {
             date: today,
             day: day,
             exercises: exercises,
-            completed: true
-        });
+            completed: true,
+            timestamp: Date.now()
+        };
+
+        history.push(newEntry);
 
         // Save to main storage
         localStorage.setItem('workoutHistory', JSON.stringify(history));
 
+        // Save to Cloud (Firebase)
+        if (window.DataSync) {
+            try {
+                await DataSync.saveWorkout(newEntry);
+                console.log('✅ Treino sincronizado na nuvem!');
+            } catch (e) {
+                console.warn('⚠️ Cloud sync failed for workout, saved locally.', e);
+            }
+        }
+
         // AUTOMATIC BACKUP - Save redundant copy
         this.createAutoBackup();
-
         this.updateStats();
     },
 
@@ -231,6 +243,71 @@ const TrackingSystem = {
                 alert('📥 Backup semanal automático!\n\nSeus dados foram baixados para segurança.');
             }, 1000);
         }
+        // Holistic data storage
+        holisticHistory: [],
+
+            // Load holistic data from cloud
+            async loadHolisticData() {
+            if (window.DataSync) {
+                const checkins = await DataSync.getAllCheckins();
+                this.holisticHistory = Object.values(checkins).sort((a, b) => new Date(b.date) - new Date(a.date));
+                console.log(`🧘 Loaded ${this.holisticHistory.length} holistic check-ins`);
+                // Trigger dashboard refresh if active
+                if (document.getElementById('dashboard-container')) {
+                    document.getElementById('dashboard-container').innerHTML = renderDashboard();
+                }
+            }
+        },
+
+        // Get stats for last X days
+        getHolisticStats(days = 7) {
+            const history = this.holisticHistory.slice(0, days);
+            const count = history.length || 1; // avoid division by zero
+
+            // Initialize sums
+            const stats = {
+                energy: 0,
+                motivation: 0,
+                sleep: { hours: 0, quality: 0 },
+                habits: {
+                    meditation: 0,
+                    sun: 0,
+                    running: 0,
+                    coldShower: 0,
+                    goodFats: 0
+                },
+                protein: 0
+            };
+
+            // Sum up data
+            history.forEach(entry => {
+                if (entry.energy) stats.energy += parseInt(entry.energy);
+                if (entry.motivation) stats.motivation += parseInt(entry.motivation);
+
+                if (entry.sleep) {
+                    if (entry.sleep.hours) stats.sleep.hours += parseFloat(entry.sleep.hours);
+                    if (entry.sleep.quality) stats.sleep.quality += parseInt(entry.sleep.quality);
+                }
+
+                if (entry.meditation?.did) stats.habits.meditation++;
+                if (entry.sun?.did) stats.habits.sun++;
+                if (entry.running?.did) stats.habits.running++; // deprecated field support if any
+                if (entry.coldHeat?.coldShower) stats.habits.coldShower++;
+                if (entry.nutrition?.goodFats) stats.habits.goodFats++;
+                if (entry.nutrition?.protein) stats.protein += parseInt(entry.nutrition.protein);
+            });
+
+            // Calculate averages
+            return {
+                daysAnalyzed: count,
+                avgEnergy: (stats.energy / count).toFixed(1),
+                avgMotivation: (stats.motivation / count).toFixed(1),
+                avgSleep: (stats.sleep.hours / count).toFixed(1),
+                avgSleepQuality: (stats.sleep.quality / count).toFixed(1),
+                avgProtein: Math.round(stats.protein / count),
+                habitsCount: stats.habits
+            };
+        },
     }
 };
 
@@ -314,12 +391,54 @@ function renderProgressChart(exerciseName) {
     return chart;
 }
 
+// Holistic data storage
+
+
+// ... existing exportData ... (rest of the file remains, I will just replace the top part and renderDashboard)
+
+// Update dashboard stats
+updateStats() {
+    const weekWorkouts = this.getWeekWorkouts();
+    const streak = this.getStreak();
+    const volume = this.getWeekVolume();
+
+    // Update UI if elements exist
+    if (document.getElementById('weekWorkouts')) document.getElementById('weekWorkouts').textContent = weekWorkouts.length;
+    if (document.getElementById('currentStreak')) document.getElementById('currentStreak').textContent = streak;
+    if (document.getElementById('weekVolume')) document.getElementById('weekVolume').textContent = Math.round(volume / 1000) + 'ton';
+
+    // Also ensure holistic data is loaded
+    if (this.holisticHistory.length === 0) {
+        this.loadHolisticData();
+    }
+},
+// ... existing getExerciseProgress ...
+getExerciseProgress(exerciseName) {
+    const history = this.getWorkoutHistory();
+    const exerciseData = [];
+    history.forEach(workout => {
+        workout.exercises.forEach(ex => {
+            if (ex.name === exerciseName && ex.sets && ex.sets.length > 0) {
+                const maxWeight = Math.max(...ex.sets.map(s => s.weight || 0));
+                exerciseData.push({ date: workout.date, weight: maxWeight });
+            }
+        });
+    });
+    return exerciseData.slice(-10);
+},
+// ... existing functions (exportData to getWeekVolume) ...
+// Note: Since replace_file_content replaces a chunk, I need to match the original structure.
+// The previous tool usage showed lines 1-397. This is a large chunk replacement.
+
+// I will replace `renderDashboard` specifically with the new version.
+
 // Dashboard render
 function renderDashboard() {
     const weekWorkouts = TrackingSystem.getWeekWorkouts();
     const streak = TrackingSystem.getStreak();
     const volume = TrackingSystem.getWeekVolume();
     const cycle = VariationSystem.getCurrentCycle();
+    const holistic = TrackingSystem.getHolisticStats(7); // Last 7 days stats
 
     let phaseInfo = '';
     if (cycle <= 3) {
@@ -332,10 +451,11 @@ function renderDashboard() {
 
     return `
         <div class="dashboard-stats">
+            <!-- Training Stats -->
             <div class="stat-card">
                 <div class="stat-icon">🏋️</div>
                 <div class="stat-info">
-                    <h3>Treinos Esta Semana</h3>
+                    <h3>Treinos (Sem)</h3>
                     <p class="stat-value" id="weekWorkouts">${weekWorkouts.length}/5</p>
                 </div>
             </div>
@@ -343,7 +463,7 @@ function renderDashboard() {
             <div class="stat-card">
                 <div class="stat-icon">🔥</div>
                 <div class="stat-info">
-                    <h3>Sequência Atual</h3>
+                    <h3>Sequência</h3>
                     <p class="stat-value" id="currentStreak">${streak} dias</p>
                 </div>
             </div>
@@ -351,8 +471,58 @@ function renderDashboard() {
             <div class="stat-card">
                 <div class="stat-icon">📊</div>
                 <div class="stat-info">
-                    <h3>Volume Semanal</h3>
+                    <h3>Volume</h3>
                     <p class="stat-value" id="weekVolume">${Math.round(volume / 1000)}ton</p>
+                </div>
+            </div>
+            
+            <!-- Holistic Stats (NEW) -->
+            <div class="stat-card">
+                <div class="stat-icon">😴</div>
+                <div class="stat-info">
+                    <h3>Sono Médio</h3>
+                    <p class="stat-value">${holistic.avgSleep}h <span style="font-size:0.7em">(${holistic.avgSleepQuality}/10)</span></p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🥩</div>
+                <div class="stat-info">
+                    <h3>Proteína</h3>
+                    <p class="stat-value">${holistic.avgProtein}g/dia</p>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                    <h3>Energia</h3>
+                    <p class="stat-value">${holistic.avgEnergy}/10</p>
+                </div>
+            </div>
+
+            <!-- Habits Grid -->
+            <div class="stat-card full-width habits-summary">
+                <div class="stat-info" style="width:100%">
+                    <h3>🧘 Hábitos (Últimos 7 dias)</h3>
+                    <div class="habits-grid-display">
+                        <div class="habit-item">
+                            <span>🧘 Meditação</span>
+                            <strong>${holistic.habitsCount.meditation}x</strong>
+                        </div>
+                        <div class="habit-item">
+                            <span>🌅 Sol Matinal</span>
+                            <strong>${holistic.habitsCount.sun}x</strong>
+                        </div>
+                        <div class="habit-item">
+                            <span>🧊 Banho Gelado</span>
+                            <strong>${holistic.habitsCount.coldShower}x</strong>
+                        </div>
+                        <div class="habit-item">
+                            <span>🥑 Gorduras Boas</span>
+                            <strong>${holistic.habitsCount.goodFats}x</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -368,17 +538,17 @@ function renderDashboard() {
         
         <div class="quick-actions">
             <h3>Ações Rápidas</h3>
-            <button onclick="showWeeklyReport()" class="action-btn">📈 Ver Relatório Semanal</button>
+            <button onclick="showWeeklyReport()" class="action-btn">📈 Relatório Detalhado</button>
             <button onclick="showProgressCharts()" class="action-btn">📊 Gráficos de Evolução</button>
         </div>
         
         <div class="quick-actions">
-            <h3>💾 Gerenciar Dados</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                Total de treinos salvos: <strong>${TrackingSystem.getTotalWorkouts()}</strong>
+            <h3>💾 Dados</h3>
+             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                Total de treinos: <strong>${TrackingSystem.getTotalWorkouts()}</strong> | Check-ins: <strong>${TrackingSystem.holisticHistory.length}</strong>
             </p>
-            <button onclick="TrackingSystem.exportData()" class="action-btn">📥 Exportar Backup</button>
-            <button onclick="importBackup()" class="action-btn">📤 Importar Backup</button>
+            <button onclick="TrackingSystem.exportData()" class="action-btn">📥 Backup</button>
+            <button onclick="importBackup()" class="action-btn">📤 Restaurar</button>
             <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
         </div>
     `;

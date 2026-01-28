@@ -224,10 +224,57 @@ const ExperimentsSystem = {
 
     // Initialize experiments
     async init() {
-        if (window.DataSync) {
-            this.experiments = await DataSync.getExperiments();
+        try {
+            // Verifica se está logado E se CloudSync está inicializado com userRef
+            const isFirebaseReady = window.CloudSync &&
+                window.CloudSync.userRef &&
+                window.DataSync;
+
+            if (isFirebaseReady) {
+                console.log('🔄 Carregando experimentos do Firebase...');
+                try {
+                    // CRIA UM TIMEOUT DE 5 SEGUNDOS
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Timeout Firebase')), 5000)
+                    );
+
+                    // Tenta carregar do Firebase, mas desiste se demorar mais de 5s
+                    this.experiments = await Promise.race([
+                        DataSync.getExperiments(),
+                        timeoutPromise
+                    ]) || [];
+
+                    console.log('✅ Experimentos carregados do Firebase:', this.experiments.length);
+                } catch (firebaseError) {
+                    console.warn('⚠️ Erro/Timeout ao carregar do Firebase, usando local:', firebaseError);
+                    const saved = localStorage.getItem('experiments');
+                    this.experiments = saved ? JSON.parse(saved) : [];
+                }
+            } else {
+                // Modo offline: carrega do localStorage
+                console.log('📴 Modo offline detectado, carregando experimentos locais...');
+                const saved = localStorage.getItem('experiments');
+                this.experiments = saved ? JSON.parse(saved) : [];
+                console.log('📴 Experimentos carregados offline:', this.experiments.length);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar experimentos:', error);
+            // Fallback para localStorage em caso de erro
+            const saved = localStorage.getItem('experiments');
+            this.experiments = saved ? JSON.parse(saved) : [];
+            console.log('⚠️ Fallback para localStorage:', this.experiments.length);
         }
+
+        // Remove loading state if UI element exists
+        const loadingEl = document.querySelector('.loading-placeholder');
+        if (loadingEl) loadingEl.style.display = 'none';
+
         return this.experiments;
+    },
+
+    // Salvar localmente
+    saveLocal() {
+        localStorage.setItem('experiments', JSON.stringify(this.experiments));
     },
 
     // Start a new experiment
@@ -244,9 +291,12 @@ const ExperimentsSystem = {
 
         this.experiments.push(experiment);
 
-        if (window.DataSync) {
+        if (window.DataSync && window.DataSync.user) {
             await DataSync.saveExperiment(experiment);
         }
+
+        // Salvar localmente também (backup/offline)
+        this.saveLocal();
 
         return experiment;
     },
@@ -263,6 +313,9 @@ const ExperimentsSystem = {
         const experiment = this.experiments.find(e => e.id === experimentId);
         if (!experiment) return null;
 
+        // Ensure dailyLogs exists
+        if (!experiment.dailyLogs) experiment.dailyLogs = {};
+
         experiment.dailyLogs[date] = {
             ...data,
             timestamp: Date.now()
@@ -274,8 +327,22 @@ const ExperimentsSystem = {
             experiment.completedAt = Date.now();
         }
 
+        // Save locally first (Optimistic)
+        localStorage.setItem('experiments', JSON.stringify(this.experiments));
+
+        // Try to save to cloud (Fire & Forget style)
         if (window.DataSync) {
-            await DataSync.saveExperiment(experiment);
+            try {
+                // Timeout of 3s for save
+                const savePromise = DataSync.saveExperiment(experiment);
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Save Timeout')), 3000)
+                );
+
+                await Promise.race([savePromise, timeoutPromise]);
+            } catch (e) {
+                console.warn('⚠️ Cloud save failed/timeout, but local save ok', e);
+            }
         }
 
         return experiment;
@@ -297,7 +364,7 @@ const ExperimentsSystem = {
 
         const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
         const elapsedDays = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
-        const loggedDays = Object.keys(experiment.dailyLogs).length;
+        const loggedDays = Object.keys(experiment.dailyLogs || {}).length;
 
         return {
             totalDays,
@@ -490,16 +557,33 @@ async function startPresetExperiment(presetId) {
 }
 
 async function logExperimentToday(experimentId) {
-    // Get today's checkin data as the log
-    const today = new Date().toISOString().split('T')[0];
-    const todayCheckin = CheckinSystem.todayData || await CheckinSystem.init();
+    try {
+        // Get today's checkin data as the log
+        const today = new Date().toISOString().split('T')[0];
 
-    await ExperimentsSystem.logProgress(experimentId, today, {
-        checkinData: todayCheckin,
-        logged: true
-    });
+        let todayCheckin = {};
+        try {
+            todayCheckin = CheckinSystem.todayData || await CheckinSystem.init() || {};
+        } catch (e) {
+            console.warn('⚠️ Could not load full checkin data, logging basic info only', e);
+        }
 
-    showSuccess('✅ Progresso registrado!');
+        await ExperimentsSystem.logProgress(experimentId, today, {
+            checkinData: todayCheckin,
+            logged: true,
+            timestamp: Date.now()
+        });
+
+        showSuccess('✅ Experimento registrado!');
+
+        // Refresh UI if possible
+        if (typeof renderExperimentsTab === 'function') {
+            setTimeout(renderExperimentsTab, 500);
+        }
+    } catch (error) {
+        console.error('Erro ao registrar experimento:', error);
+        alert('Erro ao registrar. Tente novamente offline.');
+    }
 }
 
 function viewExperimentDetails(experimentId) {
