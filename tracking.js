@@ -113,6 +113,11 @@ const TrackingSystem = {
         if (document.getElementById('weekVolume')) {
             document.getElementById('weekVolume').textContent = Math.round(volume / 1000) + 'ton';
         }
+
+        // Also ensure holistic data is loaded
+        if (this.holisticHistory.length === 0) {
+            this.loadHolisticData();
+        }
     },
 
     // Get exercise progress (last 10 workouts)
@@ -243,72 +248,74 @@ const TrackingSystem = {
                 alert('📥 Backup semanal automático!\n\nSeus dados foram baixados para segurança.');
             }, 1000);
         }
-        // Holistic data storage
-        holisticHistory: [],
+    },
 
-            // Load holistic data from cloud
-            async loadHolisticData() {
-            if (window.DataSync) {
-                const checkins = await DataSync.getAllCheckins();
-                this.holisticHistory = Object.values(checkins).sort((a, b) => new Date(b.date) - new Date(a.date));
-                console.log(`🧘 Loaded ${this.holisticHistory.length} holistic check-ins`);
-                // Trigger dashboard refresh if active
-                if (document.getElementById('dashboard-container')) {
-                    document.getElementById('dashboard-container').innerHTML = renderDashboard();
-                }
+    // Holistic data storage
+    holisticHistory: [],
+
+    // Load holistic data from cloud
+    async loadHolisticData() {
+        if (window.DataSync) {
+            const checkins = await DataSync.getAllCheckins();
+            this.holisticHistory = Object.values(checkins).sort((a, b) => new Date(b.date) - new Date(a.date));
+            console.log(`🧘 Loaded ${this.holisticHistory.length} holistic check-ins`);
+            // Trigger dashboard refresh if active
+            if (document.getElementById('dashboard-container')) {
+                document.getElementById('dashboard-container').innerHTML = renderDashboard();
             }
-        },
+        }
+    },
 
-        // Get stats for last X days
-        getHolisticStats(days = 7) {
-            const history = this.holisticHistory.slice(0, days);
-            const count = history.length || 1; // avoid division by zero
+    // Get stats for last X days
+    getHolisticStats(days = 7) {
+        const history = this.holisticHistory.slice(0, days);
+        const count = history.length || 1; // avoid division by zero
 
-            // Initialize sums
-            const stats = {
-                energy: 0,
-                motivation: 0,
-                sleep: { hours: 0, quality: 0 },
-                habits: {
-                    meditation: 0,
-                    sun: 0,
-                    running: 0,
-                    coldShower: 0,
-                    goodFats: 0
-                },
-                protein: 0
-            };
+        // Initialize sums
+        const stats = {
+            energy: 0,
+            motivation: 0,
+            sleep: { hours: 0, quality: 0 },
+            habits: {
+                meditation: 0,
+                sun: 0,
+                running: 0,
+                coldShower: 0,
+                goodFats: 0
+            },
+            protein: 0
+        };
 
-            // Sum up data
-            history.forEach(entry => {
-                if (entry.energy) stats.energy += parseInt(entry.energy);
-                if (entry.motivation) stats.motivation += parseInt(entry.motivation);
+        // Sum up data
+        history.forEach(entry => {
+            if (entry.energy) stats.energy += parseInt(entry.energy);
+            if (entry.motivation) stats.motivation += parseInt(entry.motivation);
 
-                if (entry.sleep) {
-                    if (entry.sleep.hours) stats.sleep.hours += parseFloat(entry.sleep.hours);
-                    if (entry.sleep.quality) stats.sleep.quality += parseInt(entry.sleep.quality);
-                }
+            if (entry.sleep) {
+                if (entry.sleep.hours) stats.sleep.hours += parseFloat(entry.sleep.hours);
+                if (entry.sleep.quality) stats.sleep.quality += parseInt(entry.sleep.quality);
+            }
 
-                if (entry.meditation?.did) stats.habits.meditation++;
-                if (entry.sun?.did) stats.habits.sun++;
-                if (entry.running?.did) stats.habits.running++; // deprecated field support if any
-                if (entry.coldHeat?.coldShower) stats.habits.coldShower++;
-                if (entry.nutrition?.goodFats) stats.habits.goodFats++;
-                if (entry.nutrition?.protein) stats.protein += parseInt(entry.nutrition.protein);
-            });
+            if (entry.meditation?.did) stats.habits.meditation++;
+            if (entry.sun?.did) stats.habits.sun++;
+            if (entry.running?.did) stats.habits.running++; // deprecated field support if any
+            if (entry.coldHeat?.coldShower) stats.habits.coldShower++;
+            if (entry.nutrition?.goodFats) stats.habits.goodFats++;
+            if (entry.nutrition?.protein) stats.protein += parseInt(entry.nutrition.protein);
+        });
 
-            // Calculate averages
-            return {
-                daysAnalyzed: count,
-                avgEnergy: (stats.energy / count).toFixed(1),
-                avgMotivation: (stats.motivation / count).toFixed(1),
-                avgSleep: (stats.sleep.hours / count).toFixed(1),
-                avgSleepQuality: (stats.sleep.quality / count).toFixed(1),
-                avgProtein: Math.round(stats.protein / count),
-                habitsCount: stats.habits
-            };
-        },
-    }
+        // Calculate averages
+        return {
+            daysAnalyzed: count,
+            avgEnergy: (stats.energy / count).toFixed(1),
+            avgMotivation: (stats.motivation / count).toFixed(1),
+            avgSleep: (stats.sleep.hours / count).toFixed(1),
+            avgSleepQuality: (stats.sleep.quality / count).toFixed(1),
+            avgProtein: Math.round(stats.protein / count),
+            habitsCount: stats.habits
+        };
+    },
+}
 };
 
 // Exercise variation system
@@ -391,46 +398,7 @@ function renderProgressChart(exerciseName) {
     return chart;
 }
 
-// Holistic data storage
 
-
-// ... existing exportData ... (rest of the file remains, I will just replace the top part and renderDashboard)
-
-// Update dashboard stats
-updateStats() {
-    const weekWorkouts = this.getWeekWorkouts();
-    const streak = this.getStreak();
-    const volume = this.getWeekVolume();
-
-    // Update UI if elements exist
-    if (document.getElementById('weekWorkouts')) document.getElementById('weekWorkouts').textContent = weekWorkouts.length;
-    if (document.getElementById('currentStreak')) document.getElementById('currentStreak').textContent = streak;
-    if (document.getElementById('weekVolume')) document.getElementById('weekVolume').textContent = Math.round(volume / 1000) + 'ton';
-
-    // Also ensure holistic data is loaded
-    if (this.holisticHistory.length === 0) {
-        this.loadHolisticData();
-    }
-},
-// ... existing getExerciseProgress ...
-getExerciseProgress(exerciseName) {
-    const history = this.getWorkoutHistory();
-    const exerciseData = [];
-    history.forEach(workout => {
-        workout.exercises.forEach(ex => {
-            if (ex.name === exerciseName && ex.sets && ex.sets.length > 0) {
-                const maxWeight = Math.max(...ex.sets.map(s => s.weight || 0));
-                exerciseData.push({ date: workout.date, weight: maxWeight });
-            }
-        });
-    });
-    return exerciseData.slice(-10);
-},
-// ... existing functions (exportData to getWeekVolume) ...
-// Note: Since replace_file_content replaces a chunk, I need to match the original structure.
-// The previous tool usage showed lines 1-397. This is a large chunk replacement.
-
-// I will replace `renderDashboard` specifically with the new version.
 
 // Dashboard render
 function renderDashboard() {
@@ -526,6 +494,61 @@ function renderDashboard() {
                 </div>
             </div>
             
+             <!-- Milestones (Marcos) -->
+            <div class="stat-card full-width">
+               <div class="stat-info" style="width:100%">
+                    <h3>🎯 Marcos e Metas</h3>
+                    <div class="milestones-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                        <div class="milestone-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: var(--text-secondary); font-size: 0.8rem;">3 meses</span>
+                            <strong style="color: var(--primary);">71-73kg</strong>
+                        </div>
+                        <div class="milestone-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: var(--text-secondary); font-size: 0.8rem;">6 meses</span>
+                            <strong style="color: var(--primary);">75-77kg</strong>
+                        </div>
+                        <div class="milestone-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: var(--text-secondary); font-size: 0.8rem;">12 meses</span>
+                            <strong style="color: var(--primary);">80-82kg</strong>
+                        </div>
+                         <div class="milestone-item highlight" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: #fbbf24; font-size: 0.8rem;">18 meses</span>
+                            <strong style="color: #fbbf24;">85-90kg 🔥</strong>
+                        </div>
+                    </div>
+               </div>
+            </div>
+
+            <!-- Strength Goals -->
+            <div class="stat-card full-width">
+               <div class="stat-info" style="width:100%">
+                    <h3>💪 Metas de Força (12 meses)</h3>
+                    <div class="strength-goals-grid" style="display: grid; gap: 10px; margin-top: 10px;">
+                         <div class="strength-card" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Agachamento</span>
+                            <div>
+                                <span style="font-size: 0.85rem; color: #666; margin-right: 5px;">Meta:</span>
+                                <strong style="color: var(--primary);">145kg</strong>
+                            </div>
+                        </div>
+                        <div class="strength-card" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Supino</span>
+                             <div>
+                                <span style="font-size: 0.85rem; color: #666; margin-right: 5px;">Meta:</span>
+                                <strong style="color: var(--primary);">95kg</strong>
+                            </div>
+                        </div>
+                        <div class="strength-card" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-secondary);">Levantamento Terra</span>
+                             <div>
+                                <span style="font-size: 0.85rem; color: #666; margin-right: 5px;">Meta:</span>
+                                <strong style="color: var(--primary);">165kg</strong>
+                            </div>
+                        </div>
+                    </div>
+               </div>
+            </div>
+
             <div class="stat-card full-width">
                 <div class="stat-icon">📅</div>
                 <div class="stat-info">
