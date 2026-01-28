@@ -393,14 +393,14 @@ function showTab(tabName) {
     // Hide all tab contents
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
-        tab.style.display = 'none';
+        tab.style.display = 'none'; // Force hide all
     });
 
     // Show selected tab content
     const selectedTab = document.getElementById(tabName);
     if (selectedTab) {
         selectedTab.classList.add('active');
-        selectedTab.style.display = 'block';
+        selectedTab.style.display = 'block'; // Force show selected
     }
 
     // Update top tab buttons
