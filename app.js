@@ -424,6 +424,12 @@ function showTab(tabName) {
         if (container) {
             container.innerHTML = renderDashboard();
         }
+    } else if (tabName === 'dashboard' && typeof window.renderDashboard !== 'undefined') {
+        // Fallback scope check
+        const container = document.getElementById('dashboard-container');
+        if (container) {
+            container.innerHTML = window.renderDashboard();
+        }
     }
 
     // Initialize Conscious Training for treino tab
