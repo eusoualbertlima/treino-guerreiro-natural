@@ -99,6 +99,10 @@ async function signInWithGoogle() {
 function enterOfflineMode() {
     console.log('📴 Entrando em modo offline...');
 
+    // Remove logged-out class and add logged-in class to show content
+    document.body.classList.remove('logged-out');
+    document.body.classList.add('logged-in');
+
     // Esconder tela de login e mostrar app
     hideLoginScreen();
 
@@ -116,6 +120,11 @@ function enterOfflineMode() {
     document.body.appendChild(badge);
 
     showSuccess('Modo offline ativado! Seus dados serão salvos localmente.');
+
+    // Force tab update to ensure rendering
+    if (typeof showTab === 'function') {
+        showTab('treino'); 
+    }
 }
 
 // Mostrar prompt para modo offline
