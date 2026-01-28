@@ -315,7 +315,6 @@ const TrackingSystem = {
             habitsCount: stats.habits
         };
     },
-}
 };
 
 // Exercise variation system
