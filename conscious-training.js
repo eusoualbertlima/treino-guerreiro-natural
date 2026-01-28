@@ -515,11 +515,23 @@ function renderConsciousWorkout(workout, recommendation) {
                                 <p class="exercise-muscle">${ex.muscle}</p>
                             </div>
                             <div class="exercise-sets">
-                                <span>${ex.sets} x ${ex.reps}</span>
+                                <span>${ex.sets} séries</span>
                             </div>
                         </div>
                         <p class="exercise-tip">💡 ${ex.tip}</p>
-                        <div class="exercise-feel" style="display: none;">
+                        
+                        <div class="exercise-inputs" style="margin-top: 15px; display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.8rem; color: #aaa;">Carga (kg)</label>
+                                <input type="number" class="conscious-input-weight" id="conscious-weight-${i}" placeholder="kg" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.8rem; color: #aaa;">Reps Totais</label>
+                                <input type="number" class="conscious-input-reps" id="conscious-reps-${i}" placeholder="${ex.reps}" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                            </div>
+                        </div>
+
+                        <div class="exercise-feel" style="display: none; margin-top: 15px;">
                             <label>Como foi?</label>
                             <div class="feel-buttons">
                                 <button onclick="logExerciseFeel(${i}, 'fraco')">😕 Fraco</button>
@@ -528,7 +540,7 @@ function renderConsciousWorkout(workout, recommendation) {
                                 <button onclick="logExerciseFeel(${i}, 'incrivel')">🔥 Incrível</button>
                             </div>
                         </div>
-                        <button class="btn-done-exercise" onclick="markExerciseDone(${i})">
+                        <button class="btn-done-exercise" onclick="markExerciseDone(${i})" style="margin-top: 15px; width: 100%; padding: 10px;">
                             ✅ Feito
                         </button>
                     </div>
@@ -557,7 +569,7 @@ function markExerciseDone(index) {
 // Registrar sensação do exercício
 const exerciseLogs = {};
 function logExerciseFeel(index, feel) {
-    exerciseLogs[index] = feel;
+    exerciseLogs[index] = { feel }; // Start object
 
     const card = document.querySelector(`.exercise-card-conscious[data-index="${index}"]`);
     if (card) {
@@ -571,11 +583,31 @@ async function completeConsciousWorkout(workoutId) {
     const overallFeel = prompt('Como foi o treino geral?\n1 = Ruim\n2 = OK\n3 = Bom\n4 = Incrível') || '3';
     const feelMap = { '1': 'ruim', '2': 'ok', '3': 'bom', '4': 'incrivel' };
 
-    await ConsciousTraining.logWorkoutComplete(workoutId, exerciseLogs, feelMap[overallFeel] || 'bom');
+    // Collect data from inputs
+    const exerciseData = [];
+    const cards = document.querySelectorAll('.exercise-card-conscious');
+
+    cards.forEach((card, index) => {
+        const weight = card.querySelector(`#conscious-weight-${index}`)?.value;
+        const reps = card.querySelector(`#conscious-reps-${index}`)?.value;
+        const name = card.querySelector('h4').textContent;
+        const feel = exerciseLogs[index]?.feel || 'ok';
+
+        exerciseData.push({
+            name,
+            weight: weight || 0,
+            reps: reps || 0,
+            feel
+        });
+    });
+
+    await ConsciousTraining.logWorkoutComplete(workoutId, exerciseData, feelMap[overallFeel] || 'bom');
 
     // Mostrar sucesso
     if (typeof showSuccess === 'function') {
-        showSuccess('✅ Treino completado e registrado no Check-in!');
+        showSuccess('✅ Treino completado e registrado!');
+    } else {
+        alert('✅ Treino registrado!');
     }
 
     // Voltar para a tela inicial do treino

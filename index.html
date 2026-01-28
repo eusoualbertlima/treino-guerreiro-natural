@@ -77,6 +77,8 @@
                     onclick="openTemplateManager()" style="padding: 8px 15px; font-size: 0.9rem;">⚙️ Montar
                     Treinos</button>
             </div>
+            <!-- Day selector removed as per user request -->
+            <!-- 
             <div class="day-selector">
                 <button class="day-btn" onclick="selectDay('seg')">SEG</button>
                 <button class="day-btn" onclick="selectDay('ter')">TER</button>
@@ -85,7 +87,8 @@
                 <button class="day-btn" onclick="selectDay('sex')">SEX</button>
                 <button class="day-btn" onclick="selectDay('sab')">SAB</button>
                 <button class="day-btn" onclick="selectDay('dom')">DOM</button>
-            </div>
+            </div> 
+            -->
 
             <div id="workout-content">
                 <!-- Workout will be loaded here -->
@@ -260,10 +263,35 @@
             </div>
         </div>
 
-        <!-- Dashboard Tab -->
+        <!-- Dashboard/Progresso Tab -->
         <div id="dashboard" class="tab-content">
-            <div id="dashboard-container">
-                <!-- Will be populated by JavaScript -->
+            <div class="progress-section">
+                <h2>📊 Seu Progresso</h2>
+
+                <div class="weight-card" style="background: #1f2937; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <h3 style="margin-top:0; font-size:1rem; color:#9ca3af">Acompanhamento de Peso</h3>
+                    <div class="weight-input" style="display:flex; gap:10px; align-items:center; margin: 10px 0;">
+                        <label>Atual:</label>
+                        <input type="number" id="weightInput" value="68" step="0.1" style="width: 80px; padding: 5px; border-radius: 5px; border: 1px solid #374151; background: #111827; color: white;"> kg
+                        <button onclick="updateWeight()" class="btn btn-sm btn-primary">Salvar</button>
+                    </div>
+
+                    <div class="goal-tracker">
+                        <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:5px;">
+                            <span>68kg</span>
+                            <span>Meta: 85kg</span>
+                        </div>
+                        <div class="progress-bar" style="height: 10px; background: #374151; border-radius: 5px; overflow: hidden;">
+                            <div class="progress-fill" id="progressBar" style="height: 100%; background: #10B981; width: 0%;"></div>
+                        </div>
+                        <p id="progressText" style="text-align:right; font-size:0.8rem; margin-top:5px; color:#9ca3af">0% completo</p>
+                    </div>
+                </div>
+
+                <!-- Dynamic Stats from tracking.js -->
+                <div id="dashboard-container">
+                    <!-- Will be populated by JavaScript -->
+                </div>
             </div>
         </div>
 
@@ -441,8 +469,8 @@
             <span class="label">Nutrição</span>
         </button>
         <button class="nav-btn" onclick="showTab('dashboard')">
-            <span class="icon">📈</span>
-            <span class="label">Stats</span>
+            <span class="icon">📊</span>
+            <span class="label">Progresso</span>
         </button>
     </nav>
 
@@ -490,6 +518,12 @@
                 if (typeof initExperimentsTab === 'function') initExperimentsTab();
             } else if (tabName === 'affirmations-tab') {
                 if (typeof initAffirmationsTab === 'function') initAffirmationsTab();
+            } else if (tabName === 'dashboard') {
+                // Ensure dashboard is rendered
+                const container = document.getElementById('dashboard-container');
+                if (container && window.renderDashboard) {
+                    container.innerHTML = window.renderDashboard();
+                }
             }
 
             // Update bottom nav active state
