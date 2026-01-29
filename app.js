@@ -384,7 +384,10 @@ let currentWeight = 68;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    selectDay('seg'); // Show Monday workout by default
+    // Check if user is already logged in before selecting day
+    if (window.FirebaseAuth && window.FirebaseAuth.isLoggedIn()) {
+        selectDay('seg');
+    }
     updateProgressBar();
 });
 
@@ -515,8 +518,9 @@ function updateWeight() {
     document.getElementById('currentWeight').textContent = currentWeight + 'kg';
     updateProgressBar();
 
-    // Save to localStorage
-    localStorage.setItem('weight', currentWeight);
+    // Save to localStorage (user-isolated)
+    const key = typeof TrackingSystem !== 'undefined' ? TrackingSystem.getStoreKey('weight') : 'weight';
+    localStorage.setItem(key, currentWeight);
 }
 
 // Update Progress Bar
@@ -579,14 +583,44 @@ function saveCurrentWorkout() {
 
 // Load saved weight on init
 window.addEventListener('load', () => {
-    const savedWeight = localStorage.getItem('weight');
+    const key = typeof TrackingSystem !== 'undefined' ? TrackingSystem.getStoreKey('weight') : 'weight';
+    const savedWeight = localStorage.getItem(key);
     if (savedWeight) {
         currentWeight = parseFloat(savedWeight);
-        document.getElementById('weightInput').value = currentWeight;
-        document.getElementById('currentWeight').textContent = currentWeight + 'kg';
+        const weightInput = document.getElementById('weightInput');
+        if (weightInput) weightInput.value = currentWeight;
+        const currentWeightEl = document.getElementById('currentWeight');
+        if (currentWeightEl) currentWeightEl.textContent = currentWeight + 'kg';
         updateProgressBar();
     }
 });
+
+// Reset application state (called on logout/login transition)
+window.resetAppState = function () {
+    console.log('🧹 Resetting app state...');
+
+    // Reset memory state
+    currentDay = 'seg';
+    currentWeight = 68;
+
+    // Reset UI
+    const weightInput = document.getElementById('weightInput');
+    if (weightInput) weightInput.value = 68;
+    const currentWeightEl = document.getElementById('currentWeight');
+    if (currentWeightEl) currentWeightEl.textContent = '68kg';
+
+    const workoutContent = document.getElementById('workout-content');
+    if (workoutContent) workoutContent.innerHTML = '';
+
+    const dashboardContainer = document.getElementById('dashboard-container');
+    if (dashboardContainer) dashboardContainer.innerHTML = '';
+
+    // Reset other systems
+    if (typeof resetTrackingSystem === 'function') resetTrackingSystem();
+    if (typeof resetConsciousTraining === 'function') resetConsciousTraining();
+
+    updateProgressBar();
+};
 
 // Get last workout data for specific exercise
 function getLastWorkoutData(day, exerciseName) {

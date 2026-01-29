@@ -56,7 +56,7 @@ function handleAuthStateChange(user) {
         // Update UI with user info
         updateUserUI(user);
 
-        // Start data sync
+        // Start data sync (handles state reset internally)
         startDataSync();
 
         // Migrate local data if exists
@@ -65,6 +65,11 @@ function handleAuthStateChange(user) {
         console.log('❌ Not logged in');
         document.body.classList.add('logged-out');
         document.body.classList.remove('logged-in');
+
+        // Clear UI and state
+        if (typeof resetAppState === 'function') {
+            resetAppState();
+        }
 
         // Show login screen
         showLoginScreen();
@@ -123,7 +128,7 @@ function enterOfflineMode() {
 
     // Force tab update to ensure rendering
     if (typeof showTab === 'function') {
-        showTab('treino'); 
+        showTab('treino');
     }
 }
 
@@ -166,6 +171,12 @@ async function signOut() {
     try {
         await firebaseAuth.signOut();
         console.log('✅ Signed out');
+
+        // IMPORTANT: Clear application state and sensitive keys
+        if (typeof resetAppState === 'function') {
+            resetAppState();
+        }
+
     } catch (error) {
         console.error('❌ Sign out error:', error);
     }

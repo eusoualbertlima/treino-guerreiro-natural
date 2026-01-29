@@ -134,14 +134,18 @@ const CloudSync = {
         console.log('✅ All pending writes processed');
     },
 
-    // Local storage backup
+    // Local storage backup - Isolated by User ID
     saveLocal(path, data) {
-        const key = `labpessoal_${path.replace(/\//g, '_')}`;
+        const user = window.FirebaseAuth?.getCurrentUser();
+        const prefix = user ? `labpessoal_${user.uid}_` : 'labpessoal_';
+        const key = `${prefix}${path.replace(/\//g, '_')}`;
         localStorage.setItem(key, JSON.stringify(data));
     },
 
     getLocal(path) {
-        const key = `labpessoal_${path.replace(/\//g, '_')}`;
+        const user = window.FirebaseAuth?.getCurrentUser();
+        const prefix = user ? `labpessoal_${user.uid}_` : 'labpessoal_';
+        const key = `${prefix}${path.replace(/\//g, '_')}`;
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : null;
     },
@@ -252,6 +256,14 @@ function startDataSync() {
     if (!user) {
         console.warn('No user logged in, cannot start sync');
         return;
+    }
+
+    // IMPORTANT: Clear previous user data from memory before loading new one
+    if (window.CloudSync) window.CloudSync.cleanup();
+
+    // Reset global state variables in app.js if they exist
+    if (typeof resetAppState === 'function') {
+        resetAppState();
     }
 
     CloudSync.init(user.uid);

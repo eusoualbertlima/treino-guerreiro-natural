@@ -139,7 +139,8 @@ const ConsciousTraining = {
             const workouts = await DataSync.getWorkouts();
             this.lastWorkout = workouts.length > 0 ? workouts[0] : null;
         } else {
-            const stored = localStorage.getItem('lastWorkout');
+            const key = typeof TrackingSystem !== 'undefined' ? TrackingSystem.getStoreKey('lastWorkout') : 'lastWorkout';
+            const stored = localStorage.getItem(key);
             if (stored) this.lastWorkout = JSON.parse(stored);
         }
         return this;
@@ -278,7 +279,8 @@ const ConsciousTraining = {
         if (window.DataSync) {
             await DataSync.saveWorkout(workoutLog);
         } else {
-            localStorage.setItem('lastWorkout', JSON.stringify(workoutLog));
+            const key = typeof TrackingSystem !== 'undefined' ? TrackingSystem.getStoreKey('lastWorkout') : 'lastWorkout';
+            localStorage.setItem(key, JSON.stringify(workoutLog));
         }
 
         // Sincronizar com Check-in
@@ -659,3 +661,16 @@ window.markExerciseDone = markExerciseDone;
 window.logExerciseFeel = logExerciseFeel;
 window.completeConsciousWorkout = completeConsciousWorkout;
 window.showPreWorkoutState = showPreWorkoutState;
+
+// Cleanup for logout
+window.resetConsciousTraining = function () {
+    ConsciousTraining.todayState = {
+        bodyFeel: null,
+        mindState: null,
+        sleepQuality: null,
+        energy: null,
+        intuitionNote: ''
+    };
+    ConsciousTraining.lastWorkout = null;
+    console.log('🧹 ConsciousTraining state cleared');
+};

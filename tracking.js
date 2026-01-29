@@ -1,8 +1,22 @@
 // Advanced tracking and progress features
 const TrackingSystem = {
+    // Helper to get user-specific storage key
+    getStoreKey(key) {
+        const user = window.FirebaseAuth?.getCurrentUser();
+        return user ? `labpessoal_${user.uid}_${key}` : `labpessoal_${key}`;
+    },
+
     // Get all workout history from localStorage
     getWorkoutHistory() {
-        const history = localStorage.getItem('workoutHistory');
+        // Migration support: try user-specific key first, then fallback to old generic one if not migrated
+        const userKey = this.getStoreKey('workoutHistory');
+        const genericKey = 'workoutHistory';
+
+        let history = localStorage.getItem(userKey);
+        if (!history && !window.FirebaseAuth?.getCurrentUser()) {
+            history = localStorage.getItem(genericKey);
+        }
+
         return history ? JSON.parse(history) : [];
     },
 
@@ -22,7 +36,7 @@ const TrackingSystem = {
         history.push(newEntry);
 
         // Save to main storage
-        localStorage.setItem('workoutHistory', JSON.stringify(history));
+        localStorage.setItem(this.getStoreKey('workoutHistory'), JSON.stringify(history));
 
         // Save to Cloud (Firebase)
         if (window.DataSync) {
@@ -144,8 +158,8 @@ const TrackingSystem = {
     exportData() {
         const data = {
             workoutHistory: this.getWorkoutHistory(),
-            weight: localStorage.getItem('weight'),
-            programStartDate: localStorage.getItem('programStartDate'),
+            weight: localStorage.getItem(this.getStoreKey('weight')),
+            programStartDate: localStorage.getItem(this.getStoreKey('programStartDate')),
             exportDate: new Date().toISOString()
         };
 
@@ -165,13 +179,13 @@ const TrackingSystem = {
     importData(jsonData) {
         try {
             if (jsonData.workoutHistory) {
-                localStorage.setItem('workoutHistory', JSON.stringify(jsonData.workoutHistory));
+                localStorage.setItem(this.getStoreKey('workoutHistory'), JSON.stringify(jsonData.workoutHistory));
             }
             if (jsonData.weight) {
-                localStorage.setItem('weight', jsonData.weight);
+                localStorage.setItem(this.getStoreKey('weight'), jsonData.weight);
             }
             if (jsonData.programStartDate) {
-                localStorage.setItem('programStartDate', jsonData.programStartDate);
+                localStorage.setItem(this.getStoreKey('programStartDate'), jsonData.programStartDate);
             }
 
             this.updateStats();
@@ -191,14 +205,14 @@ const TrackingSystem = {
     createAutoBackup() {
         const data = {
             workoutHistory: this.getWorkoutHistory(),
-            weight: localStorage.getItem('weight'),
-            programStartDate: localStorage.getItem('programStartDate'),
+            weight: localStorage.getItem(this.getStoreKey('weight')),
+            programStartDate: localStorage.getItem(this.getStoreKey('programStartDate')),
             backupDate: new Date().toISOString()
         };
 
         // Save to backup key
-        localStorage.setItem('workoutBackup', JSON.stringify(data));
-        localStorage.setItem('lastBackupDate', new Date().toISOString());
+        localStorage.setItem(this.getStoreKey('workoutBackup'), JSON.stringify(data));
+        localStorage.setItem(this.getStoreKey('lastBackupDate'), new Date().toISOString());
 
         // Check if should auto-download (weekly)
         this.checkWeeklyAutoDownload();
@@ -206,7 +220,7 @@ const TrackingSystem = {
 
     // Try to recover from backup if main data is lost
     tryRecoverFromBackup() {
-        const backup = localStorage.getItem('workoutBackup');
+        const backup = localStorage.getItem(this.getStoreKey('workoutBackup'));
         if (!backup) return false;
 
         try {
@@ -227,7 +241,7 @@ const TrackingSystem = {
 
     // Check if should auto-download backup (weekly)
     checkWeeklyAutoDownload() {
-        const lastDownload = localStorage.getItem('lastAutoDownload');
+        const lastDownload = localStorage.getItem(this.getStoreKey('lastAutoDownload'));
         const now = new Date();
 
         if (!lastDownload) {
@@ -241,7 +255,7 @@ const TrackingSystem = {
         // Auto-download every 7 days
         if (daysSince >= 7) {
             this.exportData();
-            localStorage.setItem('lastAutoDownload', now.toISOString());
+            localStorage.setItem(this.getStoreKey('lastAutoDownload'), now.toISOString());
 
             // Show notification
             setTimeout(() => {
@@ -343,9 +357,10 @@ const VariationSystem = {
 
     // Get current cycle week (1-6)
     getCurrentCycle() {
-        const startDate = localStorage.getItem('programStartDate');
+        const key = TrackingSystem.getStoreKey('programStartDate');
+        const startDate = localStorage.getItem(key);
         if (!startDate) {
-            localStorage.setItem('programStartDate', new Date().toISOString());
+            localStorage.setItem(key, new Date().toISOString());
             return 1;
         }
 
@@ -681,12 +696,18 @@ window.addEventListener('load', () => {
     TrackingSystem.updateStats();
 
     // Check backup status
-    const backupDate = localStorage.getItem('lastBackupDate');
+    const backupDate = localStorage.getItem(TrackingSystem.getStoreKey('lastBackupDate'));
     if (backupDate) {
         const daysOld = Math.floor((new Date() - new Date(backupDate)) / (1000 * 60 * 60 * 24));
         console.log(`📦 Último backup: ${daysOld} dia(s) atrás`);
     }
 });
+
+// Global cleanup for logout
+window.resetTrackingSystem = function () {
+    TrackingSystem.holisticHistory = [];
+    console.log('🧹 TrackingSystem state cleared');
+};
 
 // Import backup handlers
 function importBackup() {
