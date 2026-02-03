@@ -525,11 +525,11 @@ function renderConsciousWorkout(workout, recommendation) {
                         <div class="exercise-inputs" style="margin-top: 15px; display: flex; gap: 10px;">
                             <div style="flex: 1;">
                                 <label style="font-size: 0.8rem; color: #aaa;">Carga (kg)</label>
-                                <input type="number" class="conscious-input-weight" id="conscious-weight-${i}" placeholder="kg" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                                <input type="number" class="conscious-input-weight" id="conscious-weight-${i}" placeholder="kg" oninput="saveTempWorkoutData()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
                             </div>
                             <div style="flex: 1;">
                                 <label style="font-size: 0.8rem; color: #aaa;">Reps Totais</label>
-                                <input type="number" class="conscious-input-reps" id="conscious-reps-${i}" placeholder="${ex.reps}" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                                <input type="number" class="conscious-input-reps" id="conscious-reps-${i}" placeholder="${ex.reps}" oninput="saveTempWorkoutData()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
                             </div>
                         </div>
 
@@ -556,7 +556,11 @@ function renderConsciousWorkout(workout, recommendation) {
             </button>
         </div>
     `;
+
+    // Load any previously saved temporary data
+    loadTempWorkoutData();
 }
+
 
 // Marcar exercício como feito
 function markExerciseDone(index) {
@@ -605,6 +609,9 @@ async function completeConsciousWorkout(workoutId) {
 
     await ConsciousTraining.logWorkoutComplete(workoutId, exerciseData, feelMap[overallFeel] || 'bom');
 
+    // Clear temporary data after successful save
+    clearTempWorkoutData();
+
     // Mostrar sucesso
     if (typeof showSuccess === 'function') {
         showSuccess('✅ Treino completado e registrado!');
@@ -652,6 +659,64 @@ function showPreWorkoutState() {
     }
 }
 
+// ===== Auto-Save Functions =====
+const TEMP_WORKOUT_KEY = 'consc_temp_workout_data';
+
+function saveTempWorkoutData() {
+    const cards = document.querySelectorAll('.exercise-card-conscious');
+    const tempData = {};
+    const today = new Date().toISOString().split('T')[0];
+
+    cards.forEach((card, index) => {
+        const weight = document.getElementById(`conscious-weight-${index}`)?.value || '';
+        const reps = document.getElementById(`conscious-reps-${index}`)?.value || '';
+        if (weight || reps) {
+            tempData[index] = { weight, reps };
+        }
+    });
+
+    const user = window.FirebaseAuth?.getCurrentUser();
+    const key = user ? `labpessoal_${user.uid}_${TEMP_WORKOUT_KEY}` : TEMP_WORKOUT_KEY;
+    localStorage.setItem(key, JSON.stringify({ date: today, data: tempData }));
+    console.log('💾 Dados temporários salvos');
+}
+
+function loadTempWorkoutData() {
+    const user = window.FirebaseAuth?.getCurrentUser();
+    const key = user ? `labpessoal_${user.uid}_${TEMP_WORKOUT_KEY}` : TEMP_WORKOUT_KEY;
+    const stored = localStorage.getItem(key);
+
+    if (!stored) return;
+
+    try {
+        const { date, data } = JSON.parse(stored);
+        const today = new Date().toISOString().split('T')[0];
+
+        // Only restore if data is from today
+        if (date !== today) {
+            clearTempWorkoutData();
+            return;
+        }
+
+        for (const [index, values] of Object.entries(data)) {
+            const weightInput = document.getElementById(`conscious-weight-${index}`);
+            const repsInput = document.getElementById(`conscious-reps-${index}`);
+            if (weightInput && values.weight) weightInput.value = values.weight;
+            if (repsInput && values.reps) repsInput.value = values.reps;
+        }
+        console.log('✅ Dados temporários restaurados');
+    } catch (e) {
+        console.warn('Erro ao restaurar dados temporários:', e);
+    }
+}
+
+function clearTempWorkoutData() {
+    const user = window.FirebaseAuth?.getCurrentUser();
+    const key = user ? `labpessoal_${user.uid}_${TEMP_WORKOUT_KEY}` : TEMP_WORKOUT_KEY;
+    localStorage.removeItem(key);
+    console.log('🧹 Dados temporários limpos');
+}
+
 // Exportar
 window.ConsciousTraining = ConsciousTraining;
 window.initConsciousTraining = initConsciousTraining;
@@ -661,6 +726,9 @@ window.markExerciseDone = markExerciseDone;
 window.logExerciseFeel = logExerciseFeel;
 window.completeConsciousWorkout = completeConsciousWorkout;
 window.showPreWorkoutState = showPreWorkoutState;
+window.saveTempWorkoutData = saveTempWorkoutData;
+window.loadTempWorkoutData = loadTempWorkoutData;
+window.clearTempWorkoutData = clearTempWorkoutData;
 
 // Cleanup for logout
 window.resetConsciousTraining = function () {
@@ -672,5 +740,6 @@ window.resetConsciousTraining = function () {
         intuitionNote: ''
     };
     ConsciousTraining.lastWorkout = null;
+    clearTempWorkoutData();
     console.log('🧹 ConsciousTraining state cleared');
 };
