@@ -146,17 +146,40 @@ const ConsciousTraining = {
         return this;
     },
 
-    // Verificar dias desde último treino
+    // Verificar dias desde último treino (CORRIGIDO - usa histórico real)
     checkMissedDays() {
-        if (!this.lastWorkout) return { status: 'first-time', days: 0 };
+        // Usar histórico real em vez de lastWorkout que pode estar desatualizado
+        const history = typeof TrackingSystem !== 'undefined' ? TrackingSystem.getWorkoutHistory() : [];
 
-        const lastDate = new Date(this.lastWorkout.date);
+        if (history.length === 0 && !this.lastWorkout) {
+            return { status: 'first-time', days: 0 };
+        }
+
+        // Pegar data do treino mais recente do histórico
+        let lastDate;
+        if (history.length > 0) {
+            const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            lastDate = new Date(sorted[0].date);
+        } else if (this.lastWorkout) {
+            lastDate = new Date(this.lastWorkout.date);
+        } else {
+            return { status: 'first-time', days: 0 };
+        }
+
         const today = new Date();
-        const diffTime = Math.abs(today - lastDate);
+        today.setHours(0, 0, 0, 0);
+        lastDate.setHours(0, 0, 0, 0);
+
+        const diffTime = today - lastDate;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // Domingo é dia de descanso programado, não conta como "faltou"
+        const dayOfWeek = today.getDay();
+        const isRestDay = dayOfWeek === 0; // Domingo
 
         if (diffDays === 0) return { status: 'trained-today', days: 0 };
         if (diffDays === 1) return { status: 'normal', days: 1 };
+        if (diffDays === 2 && isRestDay) return { status: 'normal', days: 2 }; // Segunda após domingo
         if (diffDays === 2) return { status: 'reorganize', days: 2 };
         if (diffDays >= 3) return { status: 'gentle-return', days: diffDays };
 

@@ -386,6 +386,237 @@ const VariationSystem = {
     }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PERIODIZATION SYSTEM - Ciclos Naturais do Corpo
+// Baseado em: Periodização Ondulante + Autorregulação
+// ═══════════════════════════════════════════════════════════════════════════
+const PeriodizationSystem = {
+    // Fases do mesociclo (5 semanas)
+    phases: {
+        1: { name: 'Acumulação 1', focus: 'volume', reps: '10-15', rir: '3-4', intensity: 0.7, description: 'Volume moderado, construindo base' },
+        2: { name: 'Acumulação 2', focus: 'volume', reps: '8-12', rir: '2-3', intensity: 0.75, description: 'Volume aumentando, adaptação' },
+        3: { name: 'Intensificação 1', focus: 'força', reps: '6-10', rir: '2', intensity: 0.8, description: 'Mais carga, menos reps' },
+        4: { name: 'Intensificação 2', focus: 'força', reps: '5-8', rir: '1-2', intensity: 0.85, description: 'Pico de intensidade' },
+        5: { name: 'Deload', focus: 'recuperação', reps: '10-15', rir: '4-5', intensity: 0.5, description: 'Recuperação ativa, 50% do volume' }
+    },
+
+    // Pegar semana atual do ciclo
+    getCurrentWeek() {
+        const key = TrackingSystem.getStoreKey('periodizationStart');
+        const startDate = localStorage.getItem(key);
+
+        if (!startDate) {
+            localStorage.setItem(key, new Date().toISOString());
+            return 1;
+        }
+
+        const start = new Date(startDate);
+        const now = new Date();
+        const weeks = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000));
+
+        return (weeks % 5) + 1; // Ciclo de 5 semanas
+    },
+
+    // Pegar fase atual
+    getCurrentPhase() {
+        const week = this.getCurrentWeek();
+        return this.phases[week];
+    },
+
+    // Reset do ciclo (para quando quiser recomeçar)
+    resetCycle() {
+        const key = TrackingSystem.getStoreKey('periodizationStart');
+        localStorage.setItem(key, new Date().toISOString());
+        console.log('🔄 Ciclo de periodização resetado!');
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FATIGUE TRACKING - Detecta quando precisa de deload
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Calcular índice de fadiga baseado nos últimos treinos
+    calculateFatigueIndex() {
+        const history = TrackingSystem.getWorkoutHistory();
+        const last14Days = history.filter(w => {
+            const wDate = new Date(w.date);
+            const twoWeeksAgo = new Date();
+            twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+            return wDate >= twoWeeksAgo;
+        });
+
+        if (last14Days.length < 3) return { level: 'low', score: 0, recommendation: 'Continue treinando normalmente' };
+
+        // Fatores de fadiga
+        let fatigueScore = 0;
+
+        // 1. Frequência alta = mais fadiga
+        const daysPerWeek = last14Days.length / 2;
+        if (daysPerWeek >= 6) fatigueScore += 30;
+        else if (daysPerWeek >= 5) fatigueScore += 20;
+        else if (daysPerWeek >= 4) fatigueScore += 10;
+
+        // 2. Volume semanal
+        const weekVolume = TrackingSystem.getWeekVolume();
+        if (weekVolume > 50000) fatigueScore += 25;
+        else if (weekVolume > 30000) fatigueScore += 15;
+
+        // 3. Dias consecutivos
+        const streak = TrackingSystem.getStreak();
+        if (streak >= 10) fatigueScore += 25;
+        else if (streak >= 7) fatigueScore += 15;
+        else if (streak >= 5) fatigueScore += 5;
+
+        // 4. Checar dados holísticos (se disponíveis)
+        const holistic = TrackingSystem.getHolisticStats(7);
+        if (holistic.avgEnergy && parseFloat(holistic.avgEnergy) < 5) fatigueScore += 20;
+        if (holistic.avgSleep && parseFloat(holistic.avgSleep) < 6) fatigueScore += 15;
+
+        // Determinar nível
+        let level, recommendation;
+        if (fatigueScore >= 70) {
+            level = 'high';
+            recommendation = '🔴 DELOAD RECOMENDADO. Corpo precisa de recuperação. Reduz volume 50% essa semana.';
+        } else if (fatigueScore >= 45) {
+            level = 'medium';
+            recommendation = '🟡 Fadiga moderada. Considera um dia extra de descanso ou reduzir intensidade.';
+        } else {
+            level = 'low';
+            recommendation = '🟢 Fadiga baixa. Continua progredindo normalmente!';
+        }
+
+        return { level, score: fatigueScore, recommendation };
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LOAD SUGGESTION - Sugere carga baseada em progressão
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Sugerir carga para um exercício
+    suggestLoad(exerciseName) {
+        const progress = TrackingSystem.getExerciseProgress(exerciseName);
+        const phase = this.getCurrentPhase();
+
+        if (progress.length === 0) {
+            return {
+                weight: null,
+                suggestion: 'Primeiro treino! Comece leve para sentir o exercício.',
+                isNewExercise: true
+            };
+        }
+
+        // Pegar última carga usada
+        const lastWeight = progress[progress.length - 1].weight;
+
+        // Calcular tendência (aumento médio)
+        let avgIncrease = 0;
+        if (progress.length >= 2) {
+            const increases = [];
+            for (let i = 1; i < progress.length; i++) {
+                increases.push(progress[i].weight - progress[i - 1].weight);
+            }
+            avgIncrease = increases.reduce((a, b) => a + b, 0) / increases.length;
+        }
+
+        // Sugestão baseada na fase
+        let suggestedWeight, suggestion;
+
+        if (phase.name.includes('Deload')) {
+            suggestedWeight = Math.round(lastWeight * 0.6);
+            suggestion = `🧘 DELOAD: Use ${suggestedWeight}kg (~60% da carga). Foco em técnica.`;
+        } else if (phase.focus === 'volume') {
+            // Fases de acumulação: manter ou aumentar levemente
+            suggestedWeight = avgIncrease > 0 ? lastWeight + 2.5 : lastWeight;
+            suggestion = `📈 ACUMULAÇÃO: Manter ${lastWeight}kg ou tenta ${suggestedWeight}kg. Foco no volume.`;
+        } else {
+            // Fases de intensificação: tentar aumentar
+            suggestedWeight = lastWeight + 2.5;
+            suggestion = `💪 INTENSIFICAÇÃO: Tenta ${suggestedWeight}kg! Menos reps, mais carga.`;
+        }
+
+        return {
+            lastWeight,
+            suggestedWeight,
+            suggestion,
+            phase: phase.name,
+            avgProgress: avgIncrease.toFixed(1),
+            isNewExercise: false
+        };
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ADAPTIVE RECOMMENDATIONS - Ajusta baseado no estado
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Recomendação adaptativa para o treino do dia
+    getAdaptiveRecommendation(userState = {}) {
+        const phase = this.getCurrentPhase();
+        const fatigue = this.calculateFatigueIndex();
+        const week = this.getCurrentWeek();
+
+        let recommendation = {
+            phase: phase.name,
+            focus: phase.focus,
+            targetReps: phase.reps,
+            targetRir: phase.rir,
+            volumeMultiplier: 1,
+            intensityMultiplier: phase.intensity,
+            message: phase.description
+        };
+
+        // Adaptar baseado no estado do usuário
+        if (userState.energy) {
+            if (userState.energy <= 3) {
+                recommendation.volumeMultiplier = 0.7;
+                recommendation.message = '⚡ Energia baixa detectada. Treino reduzido em 30%.';
+            } else if (userState.energy >= 8) {
+                recommendation.volumeMultiplier = 1.1;
+                recommendation.message = '🔥 Energia ALTA! Pode dar mais gás hoje!';
+            }
+        }
+
+        // Adaptar baseado na fadiga
+        if (fatigue.level === 'high') {
+            recommendation.volumeMultiplier *= 0.5;
+            recommendation.message = fatigue.recommendation;
+        } else if (fatigue.level === 'medium' && week !== 5) {
+            recommendation.volumeMultiplier *= 0.8;
+        }
+
+        // Adaptar baseado em dor/desconforto
+        if (userState.bodyFeel === 'dolorido') {
+            recommendation.volumeMultiplier *= 0.8;
+            recommendation.targetRir = '3-4';
+            recommendation.message = '🧘 Corpo dolorido. Menos intensidade, mais recuperação.';
+        }
+
+        return recommendation;
+    },
+
+    // Obter resumo do ciclo atual
+    getCycleSummary() {
+        const week = this.getCurrentWeek();
+        const phase = this.getCurrentPhase();
+        const fatigue = this.calculateFatigueIndex();
+        const weekWorkouts = TrackingSystem.getWeekWorkouts();
+
+        return {
+            currentWeek: week,
+            totalWeeks: 5,
+            phase: phase.name,
+            focus: phase.focus,
+            description: phase.description,
+            fatigueLevel: fatigue.level,
+            fatigueScore: fatigue.score,
+            fatigueRecommendation: fatigue.recommendation,
+            weeklyWorkouts: weekWorkouts.length,
+            daysUntilDeload: week < 5 ? (5 - week) * 7 : 0
+        };
+    }
+};
+
+// Tornar global
+window.PeriodizationSystem = PeriodizationSystem;
+
 // Chart rendering (simple text-based progress indicator)
 function renderProgressChart(exerciseName) {
     const data = TrackingSystem.getExerciseProgress(exerciseName);
@@ -419,16 +650,39 @@ function renderDashboard() {
     const weekWorkouts = TrackingSystem.getWeekWorkouts();
     const streak = TrackingSystem.getStreak();
     const volume = TrackingSystem.getWeekVolume();
-    const cycle = VariationSystem.getCurrentCycle();
     const holistic = TrackingSystem.getHolisticStats(7); // Last 7 days stats
 
-    let phaseInfo = '';
-    if (cycle <= 3) {
-        phaseInfo = `<span class="phase-accumulation">Fase Acumulação (Sem ${cycle}/3)</span>`;
-    } else if (cycle <= 5) {
-        phaseInfo = `<span class="phase-intensification">Fase Intensificação (Sem ${cycle - 3}/2)</span>`;
+    // NOVO: Usar PeriodizationSystem
+    const cycleSummary = window.PeriodizationSystem ? PeriodizationSystem.getCycleSummary() : null;
+    const phase = cycleSummary ? cycleSummary.phase : 'Acumulação';
+    const week = cycleSummary ? cycleSummary.currentWeek : 1;
+    const fatigue = cycleSummary ? cycleSummary.fatigueLevel : 'low';
+    const fatigueRec = cycleSummary ? cycleSummary.fatigueRecommendation : '';
+
+    // Fase colorida baseada no tipo
+    let phaseClass, phaseColor;
+    if (phase.includes('Acumulação')) {
+        phaseClass = 'phase-accumulation';
+        phaseColor = '#22c55e';
+    } else if (phase.includes('Intensificação')) {
+        phaseClass = 'phase-intensification';
+        phaseColor = '#f59e0b';
     } else {
-        phaseInfo = `<span class="phase-deload">Fase Desload (Sem 1/1)</span>`;
+        phaseClass = 'phase-deload';
+        phaseColor = '#3b82f6';
+    }
+
+    // Fadiga indicator
+    let fatigueIcon, fatigueColorStyle;
+    if (fatigue === 'high') {
+        fatigueIcon = '🔴';
+        fatigueColorStyle = 'color: #ef4444;';
+    } else if (fatigue === 'medium') {
+        fatigueIcon = '🟡';
+        fatigueColorStyle = 'color: #f59e0b;';
+    } else {
+        fatigueIcon = '🟢';
+        fatigueColorStyle = 'color: #22c55e;';
     }
 
     return `
@@ -458,7 +712,7 @@ function renderDashboard() {
                 </div>
             </div>
             
-            <!-- Holistic Stats (NEW) -->
+            <!--Holistic Stats(NEW)-- >
             <div class="stat-card">
                 <div class="stat-icon">😴</div>
                 <div class="stat-info">
@@ -483,7 +737,7 @@ function renderDashboard() {
                 </div>
             </div>
 
-            <!-- Habits Grid -->
+            <!--Habits Grid-- >
             <div class="stat-card full-width habits-summary">
                 <div class="stat-info" style="width:100%">
                     <h3>🧘 Hábitos (Últimos 7 dias)</h3>
@@ -508,7 +762,7 @@ function renderDashboard() {
                 </div>
             </div>
             
-             <!-- Milestones (Marcos) -->
+             <!--Milestones(Marcos) -->
             <div class="stat-card full-width">
                <div class="stat-info" style="width:100%">
                     <h3>🎯 Marcos e Metas</h3>
@@ -533,7 +787,7 @@ function renderDashboard() {
                </div>
             </div>
 
-            <!-- Strength Goals -->
+            <!--Strength Goals-- >
             <div class="stat-card full-width">
                <div class="stat-info" style="width:100%">
                     <h3>💪 Metas de Força (12 meses)</h3>
@@ -566,9 +820,22 @@ function renderDashboard() {
             <div class="stat-card full-width">
                 <div class="stat-icon">📅</div>
                 <div class="stat-info">
-                    <h3>Ciclo Atual</h3>
-                    <p class="stat-value">Semana ${cycle}/6</p>
-                    ${phaseInfo}
+                    <h3>Ciclo de Periodização</h3>
+                    <p class="stat-value" style="color: ${phaseColor};">Semana ${week}/5 - ${phase}</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                        ${cycleSummary ? cycleSummary.description : ''}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="stat-card full-width">
+                <div class="stat-icon">${fatigueIcon}</div>
+                <div class="stat-info">
+                    <h3>Nível de Fadiga</h3>
+                    <p class="stat-value" style="${fatigueColorStyle}">${fatigue.toUpperCase()}</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                        ${fatigueRec}
+                    </p>
                 </div>
             </div>
         </div>
@@ -597,7 +864,7 @@ function showWeeklyReport() {
     const volume = TrackingSystem.getWeekVolume();
 
     let report = `
-        <div class="weekly-report">
+        < div class="weekly-report" >
             <h2>📊 Relatório Semanal</h2>
             <p class="report-period">${new Date().toLocaleDateString('pt-BR')}</p>
             
@@ -625,8 +892,8 @@ function showWeeklyReport() {
             </div>
             
             <button onclick="closeDashboard()" class="action-btn">Fechar</button>
-        </div>
-    `;
+        </div >
+        `;
 
     document.getElementById('workout-content').innerHTML = report;
 }
@@ -671,10 +938,10 @@ function showProgressCharts() {
 
     keyExercises.forEach(ex => {
         chartsHTML += `
-            <div class="chart-section">
-                <h3>${ex}</h3>
+        < div class="chart-section" >
+            <h3>${ex}</h3>
                 ${renderProgressChart(ex)}
-            </div>
+            </div >
         `;
     });
 

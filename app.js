@@ -1,380 +1,433 @@
-// Workout Database
-// Workout Database
+// Workout Database - MÉTODO COMPROVADO
+// Inspirado em: Tom Platz (The Quadfather) + Arnold (Panturrilha todo dia)
+// Divisão: Upper/Lower com PRIORIDADE PERNAS - 6 dias/semana
+// Filosofia: Alta intensidade, volume progressivo, consistência
 window.workouts = {
     seg: {
-        name: "LOWER A - Quad Dominante",
-        duration: "70min",
-        focus: "Quadríceps + Panturrilha Pesada",
+        name: "🦵 LEGS - Método Platz (Quadríceps)",
+        duration: "75-90min",
+        focus: "Quadríceps INTENSO + Panturrilha",
+        phase: "legs-quad",
+        inspiration: "Tom Platz - 'The Quadfather' - As melhores pernas da história do bodybuilding",
         exercises: [
             {
-                name: "Agachamento Livre",
-                target: "Quadríceps, Glúteos",
+                name: "Agachamento Livre PROFUNDO",
+                target: "Quadríceps, Glúteos, Core",
                 sets: 5,
-                reps: "5-6",
+                reps: "8-12",
+                rir: "1",
+                load: "Pesado progressivo",
                 rest: "3-4min",
-                rir: "0-1",
-                load: "85-90% 1RM",
-                notes: "💡 <strong>Respiração:</strong> Valsalva (inspire fundo, prenda, execute, expire no topo). Desça controlado, suba explosivo. Amplitude completa (coxa paralela ao chão mínimo)."
+                notes: "🎯 <strong>MÉTODO PLATZ:</strong> Amplitude ATÉ EMBAIXO. Platz agachava com 500lb+ por 20+ reps. Foco: profundidade > peso. Sem pressa na subida."
             },
             {
-                name: "Leg Press 45°",
+                name: "Leg Press 45° (Alto Volume)",
                 target: "Quadríceps",
                 sets: 4,
-                reps: "8-12",
+                reps: "15-20",
                 rir: "1-2",
-                load: "Pesado",
-                rest: "2-3min",
-                notes: "💡 Pés largura ombros. Desça até 90° joelhos. Não trave joelhos no topo."
+                load: "Moderado-Pesado",
+                rest: "2min",
+                notes: "💡 <strong>VOLUME:</strong> Platz fazia séries de 50+ reps no leg press. Objetivo: QUEIMAR. Desça fundo."
             },
             {
-                name: "Cadeira Extensora",
-                target: "Quadríceps (isolamento)",
+                name: "Hack Squat ou Sissy Squat",
+                target: "Quadríceps (reto femoral)",
                 sets: 3,
-                reps: "10-15",
-                rir: "2",
-                load: "Moderado",
-                rest: "90s",
-                notes: "💡 Controle total. Pausa 1s no pico de contração. Descida 3s."
-            },
-            {
-                name: "Mesa Flexora",
-                target: "Posterior de coxa",
-                sets: 3,
-                reps: "10-12",
-                rir: "2",
-                load: "Moderado",
-                rest: "90s",
-                notes: "💡 Evitar arqueamento lombar. Foco na contração posterior."
-            },
-            {
-                name: "Panturrilha em Pé (Gastrocnêmio)",
-                target: "Panturrilha",
-                sets: 5,
                 reps: "12-15",
                 rir: "1",
-                load: "MÁXIMO",
-                rest: "60s",
-                notes: "🔥 <strong>PRIORIDADE ABSOLUTA:</strong> Carga pesada. Amplitude completa (alongamento profundo + contração máxima). Pausa 2s no pico."
-            }
-        ]
-    },
-
-    ter: {
-        name: "UPPER A - Peito & Costas",
-        duration: "70min",
-        focus: "Empurrar & Puxar Pesado",
-        exercises: [
+                load: "Moderado",
+                rest: "90s",
+                notes: "🔥 <strong>ISOLAMENTO:</strong> Costas retas no hack. Joelhos passam dos pés = mais quad."
+            },
             {
-                name: "Supino Reto com Barra",
-                target: "Peitoral, Tríceps, Ombro anterior",
-                sets: 5,
-                reps: "5-6",
+                name: "Cadeira Extensora (Contração)",
+                target: "Quadríceps",
+                sets: 4,
+                reps: "10-15 + isometria",
                 rir: "0-1",
-                load: "85-90% 1RM",
-                rest: "3-4min",
-                notes: "💡 <strong>Respiração:</strong> Inspire descida nasal, expire subida bucal. Barra toca peito, cotovelos 45° do corpo. Escápulas retraídas."
-            },
-            {
-                name: "Remada Curvada com Barra",
-                target: "Costas (espessura), Bíceps",
-                sets: 4,
-                reps: "6-8",
-                rir: "1",
-                load: "80-85% 1RM",
-                rest: "3min",
-                notes: "💡 Pegada pronada. Puxa com <strong>COTOVELO</strong>, não mão. Barra toca abdômen inferior. Costas reta sempre."
-            },
-            {
-                name: "Supino Inclinado Halteres",
-                target: "Peitoral superior",
-                sets: 4,
-                reps: "8-10",
-                rir: "1-2",
-                load: "Pesado",
-                rest: "2min",
-                notes: "💡 Banco 30-45°. Amplitude completa. Alongamento profundo embaixo."
-            },
-            {
-                name: "Puxada Frente",
-                target: "Costas (largura), Bíceps",
-                sets: 4,
-                reps: "8-10",
-                rir: "1-2",
-                load: "Pesado",
-                rest: "2min",
-                notes: "💡 Pegada pronada, largura >ombros. Puxa até peito alto. Codição cotovelos para baixo."
-            },
-            {
-                name: "Desenvolvimento com Barra",
-                target: "Ombros, Tríceps",
-                sets: 3,
-                reps: "8-10",
-                rir: "2",
                 load: "Moderado",
-                rest: "2min",
-                notes: "💡 Pode ser sentado ou em pé. Barra vai da frente da cabeça até overhead completo."
-            }
-        ]
-    },
-
-    qua: {
-        name: "ESPECIALIZAÇÃO - Músculos Atrasados",
-        duration: "40min",
-        focus: "Panturrilha 3x + Detalhes",
-        exercises: [
-            {
-                name: "Panturrilha em Pé (Standing)",
-                target: "Gastrocnêmio",
-                sets: 4,
-                reps: "12-15",
-                rir: "1",
-                load: "Pesado",
                 rest: "60s",
-                notes: "🔥 Carga máxima progressiva. Amplitude total."
+                notes: "🔥 <strong>CONTRAÇÃO MÁXIMA:</strong> Segura 3s no topo de cada rep. Última série: hold até falha."
             },
             {
-                name: "Panturrilha Sentado (Seated)",
+                name: "Panturrilha em Pé (Arnold Method)",
+                target: "Gastrocnêmio",
+                sets: 5,
+                reps: "10-15",
+                rir: "1",
+                load: "PESADO",
+                rest: "60s",
+                notes: "🦵 <strong>ARNOLD:</strong> 'Cada rep como se fosse a última'. Amplitude COMPLETA. Segura 2s no pico."
+            },
+            {
+                name: "Panturrilha Sentado",
                 target: "Sóleo",
                 sets: 4,
                 reps: "15-20",
                 rir: "2",
                 load: "Moderado",
                 rest: "45s",
-                notes: "🔥 Pausa 3s no <strong>ALONGAMENTO</strong> (embaixo). Sentir fibras profundas."
-            },
+                notes: "🦵 Pausa 3s no ALONGAMENTO. Sóleo responde a reps altas."
+            }
+        ]
+    },
+
+    ter: {
+        name: "💪 UPPER A - Push & Pull (Força)",
+        duration: "60-70min",
+        focus: "Upper Body Completo + Panturrilha",
+        phase: "upper",
+        exercises: [
             {
-                name: "Panturrilha Unilateral (Corpo)",
-                target: "Panturrilha (equilíbrio)",
-                sets: 3,
-                reps: "20/perna",
-                rir: "2",
-                load: "Peso corporal",
-                rest: "30s",
-                notes: "🔥 Sem carga. Foco mente-músculo. Unilateral corrige assimetrias."
-            },
-            {
-                name: "Panturrilha no Leg Press",
-                target: "Panturrilha (variação)",
-                sets: 3,
-                reps: "15",
-                rir: "2",
-                load: "Pesado",
-                rest: "60s",
-                notes: "🔥 Só ponta dos pés na plataforma. Amplitude máxima."
-            },
-            {
-                name: "Rosca Punho com Barra",
-                target: "Antebraço (flexores)",
-                sets: 3,
-                reps: "15",
-                rir: "2",
-                load: "Leve/Moderado",
-                rest: "45s",
-                notes: "💡 Antebraços apoiados. Só movimento dos punhos."
-            },
-            {
-                name: "Encolhimento com Barra",
-                target: "Trapézio superior",
-                sets: 3,
-                reps: "12",
+                name: "Supino Reto com Barra",
+                target: "Peitoral, Tríceps",
+                sets: 4,
+                reps: "6-8",
                 rir: "2",
                 load: "Pesado",
-                rest: "60s",
-                notes: "💡 Movimento vertical puro. Não rolar ombros."
+                rest: "3min",
+                notes: "💪 Mantém força de empurrar. Progressão de carga semanal."
             },
             {
-                name: "Face Pull (Polia)",
-                target: "Ombro posterior, Trapézio médio",
-                sets: 3,
-                reps: "20",
+                name: "Barra Fixa ou Puxada",
+                target: "Dorsais, Bíceps",
+                sets: 4,
+                reps: "8-10",
                 rir: "2",
-                load: "Leve",
+                load: "Peso corporal/Lastro",
+                rest: "2min",
+                notes: "💪 Largura das costas. Pegada pronada."
+            },
+            {
+                name: "Desenvolvimento Sentado",
+                target: "Deltóides",
+                sets: 3,
+                reps: "8-10",
+                rir: "2",
+                load: "Moderado-Pesado",
+                rest: "2min",
+                notes: "💡 Ombros 3D. Core firme."
+            },
+            {
+                name: "Remada Curvada",
+                target: "Costas (espessura)",
+                sets: 3,
+                reps: "8-10",
+                rir: "2",
+                load: "Moderado-Pesado",
+                rest: "2min",
+                notes: "💡 Costas grossas. Aperta escápulas."
+            },
+            {
+                name: "Superset: Rosca + Tríceps",
+                target: "Bíceps, Tríceps",
+                sets: 3,
+                reps: "10-12 cada",
+                rir: "2",
+                load: "Moderado",
+                rest: "60s após superset",
+                notes: "💪 Braços eficiente."
+            },
+            {
+                name: "Panturrilha em Pé (Arnold)",
+                target: "Gastrocnêmio",
+                sets: 4,
+                reps: "12-15",
+                rir: "1",
+                load: "Pesado",
                 rest: "45s",
-                notes: "💡 Puxa para rosto. Cotovelos altos. Saúde articular ombros."
+                notes: "🦵 <strong>TODO DIA É DIA DE PANTU.</strong> Arnold treinava panturrilha 6x/semana quando era fraqueza."
+            }
+        ]
+    },
+
+    qua: {
+        name: "🦵 LEGS - Posterior & Glúteos",
+        duration: "70-80min",
+        focus: "Posterior + Glúteos + Panturrilha",
+        phase: "legs-post",
+        exercises: [
+            {
+                name: "Levantamento Terra Romeno",
+                target: "Posterior, Glúteos, Lombar",
+                sets: 4,
+                reps: "8-10",
+                rir: "2",
+                load: "Moderado-Pesado",
+                rest: "2-3min",
+                notes: "🎯 <strong>POSTERIOR FORTE = PERNAS COMPLETAS.</strong> Sinta o alongamento. Costas reta."
             },
             {
-                name: "Abdominal Remador",
-                target: "Abdômen",
-                sets: 3,
-                reps: "20",
+                name: "Cadeira Flexora",
+                target: "Posterior de Coxa",
+                sets: 4,
+                reps: "10-12",
+                rir: "1",
+                load: "Moderado",
+                rest: "90s",
+                notes: "🔥 Contração MÁXIMA no topo. Pause 2s."
+            },
+            {
+                name: "Hip Thrust (Barra)",
+                target: "Glúteos",
+                sets: 4,
+                reps: "10-12",
                 rir: "2",
-                load: "Corpo",
-                rest: "30s",
-                notes: "💡 Movimento controlado. Expirar na contração."
+                load: "Pesado",
+                rest: "2min",
+                notes: "🍑 Aperta FORTE no topo. Amplitude total."
+            },
+            {
+                name: "Avanço Caminhando",
+                target: "Glúteos, Quadríceps",
+                sets: 3,
+                reps: "12 cada perna",
+                rir: "2",
+                load: "Halteres",
+                rest: "90s",
+                notes: "💡 Passos longos = mais glúteo. Tronco vertical."
+            },
+            {
+                name: "Panturrilha Donkey ou 45°",
+                target: "Gastrocnêmio",
+                sets: 5,
+                reps: "15-20",
+                rir: "1",
+                load: "Moderado-Pesado",
+                rest: "60s",
+                notes: "🦵 <strong>VARIAÇÃO ARNOLD:</strong> Donkey calf raise era favorito dele. Amplitude máxima."
+            },
+            {
+                name: "Panturrilha Sentado",
+                target: "Sóleo",
+                sets: 3,
+                reps: "20-25",
+                rir: "2",
+                load: "Moderado",
+                rest: "45s",
+                notes: "🦵 Sóleo = volume no meio da panturrilha. Reps altas."
             }
         ]
     },
 
     qui: {
-        name: "LOWER B - Posterior Dominante",
-        duration: "70min",
-        focus: "Posterior + Glúteos + Panturrilha",
+        name: "💪 UPPER B - Push & Pull (Volume)",
+        duration: "60-70min",
+        focus: "Upper Body Completo + Panturrilha",
+        phase: "upper",
         exercises: [
             {
-                name: "Levantamento Terra Convencional",
-                target: "Posterior, Lombar, Trapézio, Grip",
-                sets: 5,
-                reps: "5-6",
-                rir: "0-1",
-                load: "85-90% 1RM",
-                rest: "3-4min",
-                notes: "💡 <strong>Técnica PERFEITA:</strong> Costas reta, peito alto, puxa com pernas primeiro, depois quadril. Valsalva breathing."
+                name: "Supino Inclinado Halteres",
+                target: "Peitoral Superior",
+                sets: 4,
+                reps: "10-12",
+                rir: "2",
+                load: "Moderado-Pesado",
+                rest: "90s",
+                notes: "💪 Peito superior definido. Alongamento profundo."
             },
             {
-                name: "Stiff / Romanian Deadlift",
-                target: "Posterior de coxa, Glúteos",
+                name: "Remada Cavalinho",
+                target: "Dorsais, Trapézio",
                 sets: 4,
-                reps: "8-10",
+                reps: "10-12",
                 rir: "2",
-                load: "70-75% 1RM",
-                rest: "2-3min",
-                notes: "💡 Joelhos levemente flexos. Barra desce até meio da tíbia. <strong>SENTIR alongamento profundo</strong> posterior."
-            },
-            {
-                name: "Avanço Búlgaro (Bulgarian Split Squat)",
-                target: "Quadríceps, Glúteos (unilateral)",
-                sets: 4,
-                reps: "10-12/perna",
-                rir: "2",
-                load: "Moderado",
+                load: "Moderado-Pesado",
                 rest: "2min",
-                notes: "💡 Perna traseira elevada. Tronco vertical. Corrige assimetrias. Halteres nas mãos."
+                notes: "💪 Costas GROSSAS. Escápulas!"
             },
             {
-                name: "Cadeira Abdutora",
-                target: "Glúteo médio",
-                sets: 3,
-                reps: "15-20",
+                name: "Elevação Lateral + Face Pull",
+                target: "Deltóide Lateral, Posterior",
+                sets: 4,
+                reps: "12-15 cada",
                 rir: "2",
-                load: "Moderado",
+                load: "Leve-Moderado",
                 rest: "60s",
-                notes: "💡 Movimento controlado. Pausa no pico. Estabilidade quadril."
+                notes: "💡 Ombros 3D. Saúde articular."
             },
             {
-                name: "Panturrilha Sentado (Sóleo)",
-                target: "Panturrilha",
-                sets: 5,
-                reps: "15-20",
-                rir: "2",
-                load: "Moderado",
-                rest: "45s",
-                notes: "🔥 Pausa 3s no alongamento. Sóleo = fibras de resistência."
-            }
-        ]
-    },
-
-    sex: {
-        name: "UPPER B - Ombros & Braços",
-        duration: "70min",
-        focus: "Delts + Bíceps & Tríceps",
-        exercises: [
-            {
-                name: "Desenvolvimento com Barra em Pé",
-                target: "Ombros (todo), Core",
-                sets: 4,
-                reps: "6-8",
-                rir: "1",
-                load: "Pesado",
-                rest: "3min",
-                notes: "💡 Military Press. Core rígido. Barra da clavícula até overhead. Não arqueamento lombar excessivo."
-            },
-            {
-                name: "Weighted Dip (Paralelas)",
-                target: "Peito inferior, Tríceps",
-                sets: 4,
-                reps: "8-10",
-                rir: "1",
-                load: "+ peso (cinto)",
-                rest: "2-3min",
-                notes: "💡 Progressão calistênica. Corpo inclinado para frente = mais peito. Vertical = mais tríceps. Amplitude completa."
-            },
-            {
-                name: "Chin-up (Pegada Supinada)",
-                target: "Costas, Bíceps",
-                sets: 4,
-                reps: "8-10",
-                rir: "2",
-                load: "+ peso se possível",
-                rest: "2min",
-                notes: "💡 Pegada palmas para você. Puxa até queixo acima barra. Bíceps trabalha forte."
-            },
-            {
-                name: "Elevação Lateral Halteres",
-                target: "Ombro lateral (deltoide médio)",
-                sets: 4,
-                reps: "12-15",
-                rir: "2",
-                load: "Leve/Moderado",
-                rest: "90s",
-                notes: "💡 Cotovelos levemente flexos. Sobe até ombros. Controle total. Sem balanço."
-            },
-            {
-                name: "Rosca Direta com Barra",
-                target: "Bíceps",
-                sets: 3,
-                reps: "8-12",
-                rir: "2",
-                load: "Moderado",
-                rest: "90s",
-                notes: "💡 Cotovelos fixos. Execução perfeita > carga. Barra EZ ou reta."
-            },
-            {
-                name: "Tríceps Testa (Skull Crusher)",
-                target: "Tríceps",
+                name: "Puxada Supinada",
+                target: "Dorsais, Bíceps",
                 sets: 3,
                 reps: "10-12",
                 rir: "2",
                 load: "Moderado",
                 rest: "90s",
-                notes: "💡 Deitado banco reto. Barra desce até testa. Só cotovelos movem."
+                notes: "💡 Costas + Bíceps."
             },
             {
-                name: "Panturrilha em Pé FINAL",
-                target: "Panturrilha (especialização)",
-                sets: 4,
-                reps: "20-30s HOLD",
-                rir: "MAX",
-                load: "Isometria",
+                name: "Crucifixo + Tríceps Pulley",
+                target: "Peitoral, Tríceps",
+                sets: 3,
+                reps: "12-15 cada",
+                rir: "1",
+                load: "Leve-Moderado",
                 rest: "60s",
-                notes: "🔥 Segura no PICO de contração por tempo. Queimação máxima. Neural training."
+                notes: "🔥 Isolamento. Pump máximo."
+            },
+            {
+                name: "Panturrilha em Pé (Arnold)",
+                target: "Gastrocnêmio",
+                sets: 4,
+                reps: "12-15",
+                rir: "1",
+                load: "Pesado",
+                rest: "45s",
+                notes: "🦵 Consistência > Intensidade ocasional. Todo treino conta."
+            }
+        ]
+    },
+
+    sex: {
+        name: "🦵 LEGS - Full Power (Platz Day)",
+        duration: "80-90min",
+        focus: "Pernas COMPLETO + Panturrilha EXTRA",
+        phase: "legs-full",
+        inspiration: "Tom Platz treinava pernas até não conseguir andar. Você não precisa ir tão longe, mas precisa SENTIR.",
+        exercises: [
+            {
+                name: "Agachamento Livre (Volume)",
+                target: "Quadríceps, Glúteos",
+                sets: 4,
+                reps: "12-15",
+                rir: "2",
+                load: "Moderado-Pesado",
+                rest: "2-3min",
+                notes: "🎯 <strong>HOJE É DIA DE VOLUME.</strong> Menos peso que segunda, mais reps. Sinta cada rep."
+            },
+            {
+                name: "Leg Press Unilateral",
+                target: "Quadríceps (equilíbrio)",
+                sets: 3,
+                reps: "12-15 cada",
+                rir: "2",
+                load: "Moderado",
+                rest: "45s/perna",
+                notes: "💡 Iguala as pernas. Corrige assimetrias."
+            },
+            {
+                name: "Stiff Unilateral",
+                target: "Posterior",
+                sets: 3,
+                reps: "10-12 cada",
+                rir: "2",
+                load: "Moderado",
+                rest: "45s/lado",
+                notes: "🔥 Alongamento profundo. Cada perna separada."
+            },
+            {
+                name: "Cadeira Flexora",
+                target: "Posterior",
+                sets: 3,
+                reps: "12-15",
+                rir: "1",
+                load: "Moderado",
+                rest: "60s",
+                notes: "💡 Contração máxima."
+            },
+            {
+                name: "🔥 Panturrilha em Pé (PRIORIDADE)",
+                target: "Gastrocnêmio",
+                sets: 6,
+                reps: "10-15",
+                rir: "0-1",
+                load: "PESADO",
+                rest: "75s",
+                notes: "🦵 <strong>SESSÃO PRINCIPAL!</strong> 6 séries pesadas. Hoje é dia de CRESCER pantu."
+            },
+            {
+                name: "Panturrilha Sentado DROPSET",
+                target: "Sóleo",
+                sets: 4,
+                reps: "15 + drop",
+                rir: "0",
+                load: "Moderado→Leve",
+                rest: "45s",
+                notes: "🦵 Faz 15, tira peso, vai até falha. QUEIMAÇÃO."
             }
         ]
     },
 
     sab: {
-        name: "CORRIDA LEVE (Opcional)",
-        duration: "20-30min",
-        focus: "Recuperação Ativa / Cardio",
+        name: "🦵 LEGS - Especialização (Quad + Pantu)",
+        duration: "60-70min",
+        focus: "Quadríceps + PANTURRILHA ESPECIALIZAÇÃO",
+        phase: "legs-spec",
+        inspiration: "Arnold cortou a calça pra mostrar as panturrilhas fracas. Treinou todo dia até crescerem. Disciplina.",
         exercises: [
             {
-                name: "Corrida Leve",
-                target: "Cardiovascular",
-                sets: 1,
-                reps: "20-30min",
-                rir: "-",
-                load: "Ritmo conversação",
-                rest: "-",
-                notes: "💡 <strong>OPCIONAL:</strong> Se fizer, coma +300-400 kcal neste dia. Não force. Prioridade é recuperação para semana seguinte."
+                name: "Agachamento Frontal ou Goblet",
+                target: "Quadríceps (ênfase)",
+                sets: 4,
+                reps: "10-12",
+                rir: "2",
+                load: "Moderado",
+                rest: "2min",
+                notes: "🎯 <strong>VARIAÇÃO:</strong> Mais quad, menos lombar. Tronco vertical."
+            },
+            {
+                name: "Leg Press Pés Juntos",
+                target: "Vasto Lateral",
+                sets: 3,
+                reps: "12-15",
+                rir: "2",
+                load: "Moderado",
+                rest: "90s",
+                notes: "💡 Pés juntos no meio da plataforma = trabalha o 'sweep' externo."
+            },
+            {
+                name: "Extensora Unilateral",
+                target: "Quadríceps",
+                sets: 3,
+                reps: "12-15 cada",
+                rir: "1",
+                load: "Moderado",
+                rest: "45s/perna",
+                notes: "🔥 Uma perna de cada vez. Iguala e isola."
+            },
+            {
+                name: "🦵 Panturrilha em Pé (MÁXIMO)",
+                target: "Gastrocnêmio",
+                sets: 6,
+                reps: "10-12",
+                rir: "0-1",
+                load: "MÁXIMO",
+                rest: "90s",
+                notes: "🦵 <strong>ESPECIALIZAÇÃO:</strong> Carga máxima. Amplitude total. Pausa 3s no pico."
+            },
+            {
+                name: "Panturrilha Sentado (Sóleo Focus)",
+                target: "Sóleo",
+                sets: 5,
+                reps: "15-20",
+                rir: "1",
+                load: "Moderado-Pesado",
+                rest: "60s",
+                notes: "🦵 Sóleo cresce com volume. Não economiza."
+            },
+            {
+                name: "Panturrilha Unilateral (Finalizador)",
+                target: "Panturrilha",
+                sets: 2,
+                reps: "Até falha cada",
+                rir: "0",
+                load: "Peso corporal",
+                rest: "30s",
+                notes: "🔥 <strong>FINALIZADOR:</strong> Sem peso, só corpo. Vai até NÃO CONSEGUIR MAIS."
             }
         ]
     },
 
     dom: {
-        name: "CORRIDA (Cardio)",
-        duration: "30-45min",
-        focus: "Saúde Cardiovascular",
-        exercises: [
-            {
-                name: "Corrida",
-                target: "Cardiovascular",
-                sets: 1,
-                reps: "30-45min",
-                rir: "-",
-                load: "Moderado",
-                rest: "-",
-                notes: "🏃 Pode ser mais intenso que sábado. Mantém saúde cardiovascular. Não afeta recuperação muscular (24h antes segunda)."
-            }
-        ]
+        name: "😴 DESCANSO TOTAL",
+        duration: "0min",
+        focus: "Recuperação e Crescimento",
+        phase: "rest",
+        isRest: true,
+        exercises: [],
+        message: "💪 'The muscle grows when you rest, not when you train.' - Tom Platz. Durma 7-9h, coma 2g proteína/kg, hidrate-se."
     }
 };
 
