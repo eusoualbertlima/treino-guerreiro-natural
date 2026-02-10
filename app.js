@@ -74,9 +74,9 @@ window.workouts = {
     },
 
     ter: {
-        name: "💪 UPPER A - Push & Pull (Força)",
-        duration: "60-70min",
-        focus: "Upper Body Completo + Panturrilha",
+        name: "💪 UPPER A - Força + Base de Massa",
+        duration: "70-80min",
+        focus: "Peito/Costas + Ombros + Braços + Panturrilha",
         phase: "upper",
         exercises: [
             {
@@ -84,30 +84,30 @@ window.workouts = {
                 target: "Peitoral, Tríceps",
                 sets: 4,
                 reps: "6-8",
-                rir: "2",
+                rir: "1-2",
                 load: "Pesado",
                 rest: "3min",
-                notes: "💪 Mantém força de empurrar. Progressão de carga semanal."
+                notes: "💪 Lift principal do dia. Progressão semanal (carga ou reps mantendo execução limpa)."
             },
             {
-                name: "Barra Fixa ou Puxada",
+                name: "Barra Fixa ou Puxada Pronada",
                 target: "Dorsais, Bíceps",
                 sets: 4,
-                reps: "8-10",
-                rir: "2",
+                reps: "6-10",
+                rir: "1-2",
                 load: "Peso corporal/Lastro",
                 rest: "2min",
-                notes: "💪 Largura das costas. Pegada pronada."
+                notes: "💪 Movimento vertical pesado para largura de costas."
             },
             {
-                name: "Desenvolvimento Sentado",
-                target: "Deltóides",
+                name: "Supino Inclinado com Halteres",
+                target: "Peitoral Superior, Tríceps",
                 sets: 3,
                 reps: "8-10",
                 rir: "2",
                 load: "Moderado-Pesado",
-                rest: "2min",
-                notes: "💡 Ombros 3D. Core firme."
+                rest: "90s",
+                notes: "🎯 Complementa o supino reto e aumenta volume útil de peito."
             },
             {
                 name: "Remada Curvada",
@@ -120,14 +120,34 @@ window.workouts = {
                 notes: "💡 Costas grossas. Aperta escápulas."
             },
             {
-                name: "Superset: Rosca + Tríceps",
+                name: "Desenvolvimento Sentado",
+                target: "Deltóides (frontal/lateral)",
+                sets: 3,
+                reps: "8-10",
+                rir: "2",
+                load: "Moderado-Pesado",
+                rest: "2min",
+                notes: "💡 Press principal de ombros. Core firme."
+            },
+            {
+                name: "Elevação Lateral",
+                target: "Deltóide Lateral",
+                sets: 3,
+                reps: "12-15",
+                rir: "1-2",
+                load: "Leve-Moderado",
+                rest: "60s",
+                notes: "💡 Controla a descida e evita balanço para maximizar estímulo."
+            },
+            {
+                name: "Superset: Rosca Direta + Tríceps Testa",
                 target: "Bíceps, Tríceps",
                 sets: 3,
                 reps: "10-12 cada",
-                rir: "2",
+                rir: "1-2",
                 load: "Moderado",
-                rest: "60s após superset",
-                notes: "💪 Braços eficiente."
+                rest: "60-75s após superset",
+                notes: "💪 Fecha o treino com volume específico de braços."
             },
             {
                 name: "Panturrilha em Pé (Arnold)",
@@ -212,70 +232,90 @@ window.workouts = {
     },
 
     qui: {
-        name: "💪 UPPER B - Push & Pull (Volume)",
-        duration: "60-70min",
-        focus: "Upper Body Completo + Panturrilha",
+        name: "💪 UPPER B - Volume Inteligente",
+        duration: "70-80min",
+        focus: "Costas/Peito + Ombros 3D + Braços + Panturrilha",
         phase: "upper",
         exercises: [
             {
-                name: "Supino Inclinado Halteres",
-                target: "Peitoral Superior",
+                name: "Puxada Supinada ou Barra Fixa Neutra",
+                target: "Dorsais, Bíceps",
                 sets: 4,
-                reps: "10-12",
+                reps: "8-12",
                 rir: "2",
                 load: "Moderado-Pesado",
                 rest: "90s",
-                notes: "💪 Peito superior definido. Alongamento profundo."
+                notes: "💪 Primeiro movimento vertical do dia para costas."
+            },
+            {
+                name: "Supino Inclinado Halteres",
+                target: "Peitoral Superior, Tríceps",
+                sets: 4,
+                reps: "8-12",
+                rir: "2",
+                load: "Moderado-Pesado",
+                rest: "90s",
+                notes: "💪 Segundo estímulo forte de peito na semana."
             },
             {
                 name: "Remada Cavalinho",
-                target: "Dorsais, Trapézio",
-                sets: 4,
+                target: "Costas (espessura), Trapézio",
+                sets: 3,
                 reps: "10-12",
                 rir: "2",
                 load: "Moderado-Pesado",
                 rest: "2min",
-                notes: "💪 Costas GROSSAS. Escápulas!"
+                notes: "💪 Costas GROSSAS. Escápulas para trás."
+            },
+            {
+                name: "Crossover ou Crucifixo Inclinado",
+                target: "Peitoral",
+                sets: 3,
+                reps: "12-15",
+                rir: "1-2",
+                load: "Leve-Moderado",
+                rest: "60s",
+                notes: "🔥 Isolamento para completar volume de peito sem sobrecarregar articulação."
             },
             {
                 name: "Elevação Lateral + Face Pull",
                 target: "Deltóide Lateral, Posterior",
-                sets: 4,
-                reps: "12-15 cada",
+                sets: 3,
+                reps: "12-20 cada",
                 rir: "2",
                 load: "Leve-Moderado",
                 rest: "60s",
                 notes: "💡 Ombros 3D. Saúde articular."
             },
             {
-                name: "Puxada Supinada",
-                target: "Dorsais, Bíceps",
+                name: "Remada Unilateral",
+                target: "Dorsais, Costas (controle unilateral)",
                 sets: 3,
                 reps: "10-12",
                 rir: "2",
                 load: "Moderado",
                 rest: "90s",
-                notes: "💡 Costas + Bíceps."
+                notes: "💡 Corrige desequilíbrios entre lados e melhora conexão mente-músculo."
             },
             {
-                name: "Crucifixo + Tríceps Pulley",
-                target: "Peitoral, Tríceps",
+                name: "Superset: Rosca Martelo + Tríceps Corda",
+                target: "Bíceps, Tríceps",
                 sets: 3,
                 reps: "12-15 cada",
                 rir: "1",
                 load: "Leve-Moderado",
                 rest: "60s",
-                notes: "🔥 Isolamento. Pump máximo."
+                notes: "🔥 Braços no fim com alto controle e pump."
             },
             {
-                name: "Panturrilha em Pé (Arnold)",
-                target: "Gastrocnêmio",
+                name: "Panturrilha Sentado (Sóleo)",
+                target: "Sóleo",
                 sets: 4,
-                reps: "12-15",
+                reps: "15-20",
                 rir: "1",
-                load: "Pesado",
+                load: "Moderado-Pesado",
                 rest: "45s",
-                notes: "🦵 Consistência > Intensidade ocasional. Todo treino conta."
+                notes: "🦵 Mantém estímulo de panturrilha frequente sem bater sempre no mesmo padrão."
             }
         ]
     },
