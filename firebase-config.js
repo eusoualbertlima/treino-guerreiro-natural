@@ -56,7 +56,7 @@ function handleAuthStateChange(user) {
         // Update UI with user info
         updateUserUI(user);
 
-        // Start data sync
+        // Start data sync (handles state reset internally)
         startDataSync();
 
         // Migrate local data if exists
@@ -65,6 +65,11 @@ function handleAuthStateChange(user) {
         console.log('❌ Not logged in');
         document.body.classList.add('logged-out');
         document.body.classList.remove('logged-in');
+
+        // Clear UI and state
+        if (typeof resetAppState === 'function') {
+            resetAppState();
+        }
 
         // Show login screen
         showLoginScreen();
@@ -99,6 +104,10 @@ async function signInWithGoogle() {
 function enterOfflineMode() {
     console.log('📴 Entrando em modo offline...');
 
+    // Remove logged-out class and add logged-in class to show content
+    document.body.classList.remove('logged-out');
+    document.body.classList.add('logged-in');
+
     // Esconder tela de login e mostrar app
     hideLoginScreen();
 
@@ -116,6 +125,11 @@ function enterOfflineMode() {
     document.body.appendChild(badge);
 
     showSuccess('Modo offline ativado! Seus dados serão salvos localmente.');
+
+    // Force tab update to ensure rendering
+    if (typeof showTab === 'function') {
+        showTab('treino');
+    }
 }
 
 // Mostrar prompt para modo offline
@@ -157,6 +171,12 @@ async function signOut() {
     try {
         await firebaseAuth.signOut();
         console.log('✅ Signed out');
+
+        // IMPORTANT: Clear application state and sensitive keys
+        if (typeof resetAppState === 'function') {
+            resetAppState();
+        }
+
     } catch (error) {
         console.error('❌ Sign out error:', error);
     }

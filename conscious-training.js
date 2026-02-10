@@ -13,6 +13,157 @@ const ConsciousTraining = {
 
     // Último treino registrado
     lastWorkout: null,
+    recentWorkouts: [],
+
+    // Metas calibradas automaticamente conforme frequência real de treino
+    weeklyVolumeTargets: {
+        chest_upper: 7,
+        chest_mid: 8,
+        chest_lower: 5,
+        back_width: 8,
+        back_thickness: 8,
+        lower_back: 4,
+        shoulders_front: 5,
+        shoulders_lateral: 8,
+        shoulders_rear: 6,
+        biceps: 8,
+        triceps: 8,
+        quads: 11,
+        hamstrings: 10,
+        glutes: 10,
+        calves: 10,
+        core: 7
+    },
+
+    goalProfiles: {
+        defaultProfile: 'hypertrophy_5x',
+        profiles: {
+            hypertrophy_4x: {
+                label: 'Hipertrofia Natural 4x',
+                targets: {
+                    chest_upper: 5,
+                    chest_mid: 6,
+                    chest_lower: 4,
+                    back_width: 6,
+                    back_thickness: 6,
+                    lower_back: 3,
+                    shoulders_front: 4,
+                    shoulders_lateral: 6,
+                    shoulders_rear: 5,
+                    biceps: 6,
+                    triceps: 6,
+                    quads: 9,
+                    hamstrings: 8,
+                    glutes: 8,
+                    calves: 8,
+                    core: 6
+                }
+            },
+            hypertrophy_5x: {
+                label: 'Hipertrofia Natural 5x',
+                targets: {
+                    chest_upper: 7,
+                    chest_mid: 8,
+                    chest_lower: 5,
+                    back_width: 8,
+                    back_thickness: 8,
+                    lower_back: 4,
+                    shoulders_front: 5,
+                    shoulders_lateral: 8,
+                    shoulders_rear: 6,
+                    biceps: 8,
+                    triceps: 8,
+                    quads: 11,
+                    hamstrings: 10,
+                    glutes: 10,
+                    calves: 10,
+                    core: 7
+                }
+            },
+            hypertrophy_6x: {
+                label: 'Hipertrofia Natural 6x',
+                targets: {
+                    chest_upper: 9,
+                    chest_mid: 10,
+                    chest_lower: 6,
+                    back_width: 10,
+                    back_thickness: 10,
+                    lower_back: 5,
+                    shoulders_front: 6,
+                    shoulders_lateral: 10,
+                    shoulders_rear: 8,
+                    biceps: 10,
+                    triceps: 10,
+                    quads: 13,
+                    hamstrings: 12,
+                    glutes: 12,
+                    calves: 12,
+                    core: 9
+                }
+            }
+        }
+    },
+
+    activeVolumeProfile: {
+        key: 'hypertrophy_5x',
+        label: 'Hipertrofia Natural 5x',
+        density: null
+    },
+
+    partDisplayNames: {
+        chest_upper: 'Peito Superior',
+        chest_mid: 'Peito Médio',
+        chest_lower: 'Peito Inferior',
+        back_width: 'Costas Largura',
+        back_thickness: 'Costas Espessura',
+        lower_back: 'Lombar',
+        shoulders_front: 'Ombro Frontal',
+        shoulders_lateral: 'Ombro Lateral',
+        shoulders_rear: 'Ombro Posterior',
+        biceps: 'Bíceps',
+        triceps: 'Tríceps',
+        quads: 'Quadríceps',
+        hamstrings: 'Posterior',
+        glutes: 'Glúteos',
+        calves: 'Panturrilha',
+        core: 'Core'
+    },
+
+    partRules: [
+        { part: 'chest_upper', keywords: ['supino inclinado', 'inclinado', 'crucifixo inclinado'] },
+        { part: 'chest_mid', keywords: ['supino reto', 'peck deck', 'crucifixo', 'crossover', 'flexao'] },
+        { part: 'chest_lower', keywords: ['supino declinado', 'declinado', 'mergulho', 'dips', 'flexao diamante'] },
+        { part: 'back_width', keywords: ['barra fixa', 'puxada', 'pulldown', 'pullover'] },
+        { part: 'back_thickness', keywords: ['remada', 'cavalinho', 'serrote'] },
+        { part: 'lower_back', keywords: ['hiperextensao', 'lombar', 'terra', 'levantamento terra'] },
+        { part: 'shoulders_front', keywords: ['desenvolvimento', 'arnold press', 'elevacao frontal'] },
+        { part: 'shoulders_lateral', keywords: ['elevacao lateral'] },
+        { part: 'shoulders_rear', keywords: ['face pull', 'ombro posterior', 'posterior ombro', 'crucifixo invertido'] },
+        { part: 'biceps', keywords: ['rosca', 'biceps'] },
+        { part: 'triceps', keywords: ['triceps', 'pulley', 'frances', 'testa', 'coice'] },
+        { part: 'quads', keywords: ['agachamento', 'hack squat', 'hack', 'leg press', 'extensora', 'sissy', 'afundo', 'passada'] },
+        { part: 'hamstrings', keywords: ['stiff', 'romeno', 'flexora', 'posterior', 'mesa flexora'] },
+        { part: 'glutes', keywords: ['hip thrust', 'gluteo', 'afundo', 'passada', 'agachamento'] },
+        { part: 'calves', keywords: ['panturrilha', 'soleo'] },
+        { part: 'core', keywords: ['prancha', 'abdominal', 'core', 'obliquos', 'elevacao de pernas'] }
+    ],
+
+    boosterLibrary: {
+        chest_upper: { name: 'Supino Inclinado (Booster)', muscle: 'Peito Superior', sets: '2', reps: '10-12', tip: 'Booster para fechar meta semanal de peito superior.' },
+        chest_mid: { name: 'Crossover (Booster)', muscle: 'Peito Médio', sets: '2', reps: '12-15', tip: 'Booster para reforçar peitoral na semana.' },
+        chest_lower: { name: 'Mergulho (Booster)', muscle: 'Peito Inferior/Tríceps', sets: '2', reps: '8-12', tip: 'Booster para peitoral inferior.' },
+        back_width: { name: 'Puxada Frontal (Booster)', muscle: 'Dorsais', sets: '2', reps: '10-12', tip: 'Booster para aumentar largura de costas.' },
+        back_thickness: { name: 'Remada Baixa (Booster)', muscle: 'Costas/Espessura', sets: '2', reps: '10-12', tip: 'Booster para espessura de costas.' },
+        shoulders_lateral: { name: 'Elevação Lateral (Booster)', muscle: 'Ombro Lateral', sets: '2', reps: '15-20', tip: 'Booster para deltoide lateral.' },
+        shoulders_rear: { name: 'Face Pull (Booster)', muscle: 'Ombro Posterior', sets: '2', reps: '15-20', tip: 'Booster para estabilidade e ombro posterior.' },
+        triceps: { name: 'Tríceps Corda (Booster)', muscle: 'Tríceps', sets: '2', reps: '12-15', tip: 'Booster para fechar volume de tríceps.' },
+        biceps: { name: 'Rosca Alternada (Booster)', muscle: 'Bíceps', sets: '2', reps: '10-12', tip: 'Booster para volume de bíceps.' },
+        quads: { name: 'Cadeira Extensora (Booster)', muscle: 'Quadríceps', sets: '2', reps: '12-15', tip: 'Booster para quadríceps.' },
+        hamstrings: { name: 'Cadeira Flexora (Booster)', muscle: 'Posterior', sets: '2', reps: '10-12', tip: 'Booster para posterior de coxa.' },
+        glutes: { name: 'Hip Thrust (Booster)', muscle: 'Glúteos', sets: '2', reps: '12-15', tip: 'Booster para glúteos.' },
+        calves: { name: 'Panturrilha em Pé (Booster)', muscle: 'Panturrilha', sets: '2', reps: '15-20', tip: 'Booster para panturrilhas.' },
+        core: { name: 'Prancha + Elevação de Pernas (Booster)', muscle: 'Core', sets: '2', reps: '30-45s', tip: 'Booster para estabilidade do core.' }
+    },
 
     // Programa semanal consciente - cobre TODOS os músculos
     weekProgram: {
@@ -132,30 +283,362 @@ const ConsciousTraining = {
         lombar: ['sex']
     },
 
+    normalizeText(text) {
+        return String(text || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+    },
+
+    parseSets(setsValue) {
+        if (typeof setsValue === 'number') return setsValue;
+        const raw = this.normalizeText(setsValue);
+        if (!raw) return 1;
+
+        const range = raw.match(/(\d+)\s*-\s*(\d+)/);
+        if (range) {
+            const min = parseInt(range[1], 10);
+            const max = parseInt(range[2], 10);
+            return Math.max(1, Math.round((min + max) / 2));
+        }
+
+        const first = raw.match(/\d+/);
+        return first ? Math.max(1, parseInt(first[0], 10)) : 1;
+    },
+
+    getWeekStartDate(referenceDate = new Date()) {
+        const start = new Date(referenceDate);
+        start.setHours(0, 0, 0, 0);
+        const day = start.getDay(); // 0=domingo
+        const offset = day === 0 ? -6 : 1 - day; // segunda como início
+        start.setDate(start.getDate() + offset);
+        return start;
+    },
+
+    getMergedWorkouts() {
+        const trackingLogs = typeof TrackingSystem !== 'undefined'
+            ? TrackingSystem.getWorkoutHistory()
+            : [];
+
+        const syncLogs = Array.isArray(this.recentWorkouts) ? this.recentWorkouts : [];
+        const merged = [];
+        const seen = new Set();
+
+        [...trackingLogs, ...syncLogs].forEach(workout => {
+            if (!workout || !workout.date) return;
+
+            const workoutDate = new Date(workout.date);
+            if (Number.isNaN(workoutDate.getTime())) return;
+
+            const key = [
+                workout.id || '',
+                workout.timestamp || '',
+                workout.date,
+                workout.day || '',
+                Array.isArray(workout.exercises) ? workout.exercises.length : 0
+            ].join('|');
+
+            if (seen.has(key)) return;
+            seen.add(key);
+            merged.push(workout);
+        });
+
+        return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+    },
+
+    getWorkoutsInRange(startDate, endDateExclusive) {
+        return this.getMergedWorkouts().filter(workout => {
+            const workoutDate = new Date(workout.date);
+            return workoutDate >= startDate && workoutDate < endDateExclusive;
+        });
+    },
+
+    getRecentTrainingDensity(daysWindow = 28) {
+        const end = new Date();
+        end.setHours(23, 59, 59, 999);
+
+        const start = new Date(end);
+        start.setDate(start.getDate() - (daysWindow - 1));
+        start.setHours(0, 0, 0, 0);
+
+        const endExclusive = new Date(end);
+        endExclusive.setDate(endExclusive.getDate() + 1);
+        endExclusive.setHours(0, 0, 0, 0);
+
+        const workouts = this.getWorkoutsInRange(start, endExclusive);
+        const trainedDates = new Set();
+
+        workouts.forEach(workout => {
+            const hasExercises = Array.isArray(workout.exercises) && workout.exercises.length > 0;
+            if (hasExercises) {
+                trainedDates.add(workout.date);
+            }
+        });
+
+        const weeks = Math.max(1, daysWindow / 7);
+        const density = trainedDates.size / weeks;
+        return Math.round(density * 10) / 10;
+    },
+
+    calibrateWeeklyTargets() {
+        const density = this.getRecentTrainingDensity(28);
+        const defaultKey = this.goalProfiles.defaultProfile;
+
+        let profileKey = defaultKey;
+        if (density >= 5.2) {
+            profileKey = 'hypertrophy_6x';
+        } else if (density > 0 && density < 4.2) {
+            profileKey = 'hypertrophy_4x';
+        }
+
+        const profile = this.goalProfiles.profiles[profileKey] || this.goalProfiles.profiles[defaultKey];
+        if (!profile || !profile.targets) return;
+
+        this.weeklyVolumeTargets = { ...profile.targets };
+        this.activeVolumeProfile = {
+            key: profileKey,
+            label: profile.label,
+            density: density > 0 ? density : null
+        };
+    },
+
+    extractExerciseName(exerciseLog) {
+        return exerciseLog?.name || exerciseLog?.exerciseName || '';
+    },
+
+    extractExerciseSets(exerciseLog) {
+        if (!exerciseLog) return 0;
+        if (Array.isArray(exerciseLog.sets)) return exerciseLog.sets.length;
+        if (typeof exerciseLog.sets === 'number' || typeof exerciseLog.sets === 'string') {
+            return this.parseSets(exerciseLog.sets);
+        }
+        if (exerciseLog.setsPlanned) return this.parseSets(exerciseLog.setsPlanned);
+        if (exerciseLog.weight || exerciseLog.reps) return 1;
+        return 0;
+    },
+
+    mapExerciseToParts(exerciseName, muscleHint = '') {
+        const normalized = `${this.normalizeText(exerciseName)} ${this.normalizeText(muscleHint)}`;
+        if (!normalized.trim()) return [];
+
+        const parts = new Set();
+        this.partRules.forEach(rule => {
+            if (rule.keywords.some(keyword => normalized.includes(this.normalizeText(keyword)))) {
+                parts.add(rule.part);
+            }
+        });
+
+        // Fallback rápido por grupo muscular genérico
+        if (parts.size === 0) {
+            if (normalized.includes('peito')) parts.add('chest_mid');
+            if (normalized.includes('costa') || normalized.includes('dorsal')) parts.add('back_thickness');
+            if (normalized.includes('ombro')) parts.add('shoulders_lateral');
+            if (normalized.includes('triceps')) parts.add('triceps');
+            if (normalized.includes('biceps')) parts.add('biceps');
+            if (normalized.includes('quadriceps')) parts.add('quads');
+            if (normalized.includes('posterior')) parts.add('hamstrings');
+            if (normalized.includes('gluteo')) parts.add('glutes');
+            if (normalized.includes('panturrilha') || normalized.includes('soleo')) parts.add('calves');
+            if (normalized.includes('core') || normalized.includes('abdomen')) parts.add('core');
+        }
+
+        return [...parts];
+    },
+
+    getCurrentWeekWorkouts() {
+        const start = this.getWeekStartDate();
+        const end = new Date(start);
+        end.setDate(end.getDate() + 7);
+        return this.getWorkoutsInRange(start, end);
+    },
+
+    getWeeklyPartCoverage() {
+        const partState = {};
+        Object.entries(this.weeklyVolumeTargets).forEach(([part, target]) => {
+            partState[part] = {
+                target,
+                done: 0
+            };
+        });
+
+        const workouts = this.getCurrentWeekWorkouts();
+        workouts.forEach(workout => {
+            const exercises = Array.isArray(workout.exercises) ? workout.exercises : [];
+            exercises.forEach(exercise => {
+                const name = this.extractExerciseName(exercise);
+                const sets = this.extractExerciseSets(exercise);
+                if (!name || sets <= 0) return;
+
+                const parts = this.mapExerciseToParts(name, exercise?.muscle || exercise?.target || '');
+                if (parts.length === 0) return;
+
+                const perPartSets = sets / parts.length;
+                parts.forEach(part => {
+                    if (partState[part]) {
+                        partState[part].done += perPartSets;
+                    }
+                });
+            });
+        });
+
+        const byPart = Object.entries(partState).map(([part, data]) => {
+            const done = Math.round(data.done * 10) / 10;
+            const deficit = Math.max(0, Math.round((data.target - done) * 10) / 10);
+            const ratio = data.target > 0 ? done / data.target : 1;
+            return {
+                part,
+                label: this.partDisplayNames[part] || part,
+                target: data.target,
+                done,
+                deficit,
+                ratio,
+                status: ratio >= 1 ? 'ok' : ratio >= 0.7 ? 'warn' : 'low'
+            };
+        }).sort((a, b) => b.deficit - a.deficit);
+
+        return {
+            byPart,
+            topDeficits: byPart.filter(item => item.deficit > 0).slice(0, 4),
+            calibration: this.activeVolumeProfile
+        };
+    },
+
+    rebalanceWorkoutForCoverage(workout, weeklyCoverage) {
+        if (!workout || workout.isRest || !Array.isArray(workout.exercises)) {
+            return workout;
+        }
+
+        const deficitMap = {};
+        (weeklyCoverage?.byPart || []).forEach(item => {
+            deficitMap[item.part] = item.deficit || 0;
+        });
+
+        const rebalanced = {
+            ...workout,
+            exercises: workout.exercises.map(ex => {
+                const parts = this.mapExerciseToParts(ex.name, ex.muscle || ex.target || '');
+                const priorityScore = parts.reduce((sum, part) => sum + (deficitMap[part] || 0), 0);
+                return { ...ex, parts, priorityScore };
+            })
+        };
+
+        rebalanced.exercises = rebalanced.exercises
+            .map((exercise, index) => ({ ...exercise, originalIndex: index }))
+            .sort((a, b) => {
+                if (b.priorityScore !== a.priorityScore) {
+                    return b.priorityScore - a.priorityScore;
+                }
+                return a.originalIndex - b.originalIndex;
+            })
+            .map(({ originalIndex, ...exercise }) => exercise);
+
+        const priorityParts = [];
+        rebalanced.exercises.forEach(exercise => {
+            (exercise.parts || []).forEach(part => {
+                if ((deficitMap[part] || 0) > 0 && !priorityParts.includes(part)) {
+                    priorityParts.push(part);
+                }
+            });
+        });
+
+        rebalanced.priorityParts = priorityParts.slice(0, 3).map(part => ({
+            part,
+            label: this.partDisplayNames[part] || part,
+            deficit: deficitMap[part]
+        }));
+
+        const topGap = rebalanced.priorityParts[0];
+        if (topGap && topGap.deficit >= 3) {
+            const partExerciseCount = rebalanced.exercises.filter(ex => (ex.parts || []).includes(topGap.part)).length;
+            const booster = this.boosterLibrary[topGap.part];
+            if (booster && partExerciseCount <= 1) {
+                rebalanced.exercises.push({
+                    ...booster,
+                    isBooster: true,
+                    parts: [topGap.part],
+                    priorityScore: topGap.deficit
+                });
+                rebalanced.volumeNote = `🎯 Booster adicionado para ${topGap.label} (déficit semanal de ${topGap.deficit} séries).`;
+            }
+        }
+
+        return rebalanced;
+    },
+
     // Inicializar
     async init() {
-        // Carregar último treino do storage
+        const trackingHistory = typeof TrackingSystem !== 'undefined'
+            ? TrackingSystem.getWorkoutHistory()
+            : [];
+
+        // Carregar último treino do storage/cloud
         if (window.DataSync) {
             const workouts = await DataSync.getWorkouts();
-            this.lastWorkout = workouts.length > 0 ? workouts[0] : null;
-        } else {
-            const stored = localStorage.getItem('lastWorkout');
-            if (stored) this.lastWorkout = JSON.parse(stored);
+            this.recentWorkouts = Array.isArray(workouts) ? workouts : [];
+            this.lastWorkout = this.recentWorkouts.length > 0 ? this.recentWorkouts[0] : null;
         }
+
+        // Fallback local caso não haja dados da nuvem
+        if (this.recentWorkouts.length === 0 && trackingHistory.length > 0) {
+            this.recentWorkouts = [...trackingHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+            this.lastWorkout = this.recentWorkouts[0];
+        }
+
+        // Último fallback explícito no localStorage legado
+        if (!this.lastWorkout) {
+            const key = typeof TrackingSystem !== 'undefined'
+                ? TrackingSystem.getStoreKey('lastWorkout')
+                : 'lastWorkout';
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                this.lastWorkout = JSON.parse(stored);
+                this.recentWorkouts = [this.lastWorkout];
+            }
+        }
+
+        // Ajusta metas semanais pelo padrão real de treino das últimas semanas
+        this.calibrateWeeklyTargets();
+
         return this;
     },
 
-    // Verificar dias desde último treino
+    // Verificar dias desde último treino (CORRIGIDO - usa histórico real)
     checkMissedDays() {
-        if (!this.lastWorkout) return { status: 'first-time', days: 0 };
+        const trackingHistory = typeof TrackingSystem !== 'undefined'
+            ? TrackingSystem.getWorkoutHistory()
+            : [];
+        const history = [...trackingHistory, ...this.recentWorkouts].filter(workout => workout?.date);
 
-        const lastDate = new Date(this.lastWorkout.date);
+        if (history.length === 0 && !this.lastWorkout) {
+            return { status: 'first-time', days: 0 };
+        }
+
+        // Pegar data do treino mais recente do histórico
+        let lastDate;
+        if (history.length > 0) {
+            const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            lastDate = new Date(sorted[0].date);
+        } else if (this.lastWorkout) {
+            lastDate = new Date(this.lastWorkout.date);
+        } else {
+            return { status: 'first-time', days: 0 };
+        }
+
         const today = new Date();
-        const diffTime = Math.abs(today - lastDate);
+        today.setHours(0, 0, 0, 0);
+        lastDate.setHours(0, 0, 0, 0);
+
+        const diffTime = today - lastDate;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // Domingo é dia de descanso programado, não conta como "faltou"
+        const dayOfWeek = today.getDay();
+        const isRestDay = dayOfWeek === 0; // Domingo
 
         if (diffDays === 0) return { status: 'trained-today', days: 0 };
         if (diffDays === 1) return { status: 'normal', days: 1 };
+        if (diffDays === 2 && isRestDay) return { status: 'normal', days: 2 }; // Segunda após domingo
         if (diffDays === 2) return { status: 'reorganize', days: 2 };
         if (diffDays >= 3) return { status: 'gentle-return', days: diffDays };
 
@@ -167,7 +650,12 @@ const ConsciousTraining = {
         const days = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
         const todayKey = days[new Date().getDay()];
 
-        let workout = this.weekProgram[todayKey];
+        let workout = this.weekProgram[todayKey]
+            ? {
+                ...this.weekProgram[todayKey],
+                exercises: (this.weekProgram[todayKey].exercises || []).map(ex => ({ ...ex }))
+            }
+            : null;
 
         // Tentar usar treinos detalhados do app.js (window.workouts)
         if (window.workouts && window.workouts[todayKey]) {
@@ -193,13 +681,19 @@ const ConsciousTraining = {
             };
         }
 
+        const weeklyCoverage = this.getWeeklyPartCoverage();
+        if (workout && !workout.isRest) {
+            workout = this.rebalanceWorkoutForCoverage(workout, weeklyCoverage);
+        }
+
         const missedStatus = this.checkMissedDays();
 
         return {
             workout,
             day: todayKey,
             missedStatus,
-            recommendation: this.getRecommendation(workout, missedStatus)
+            recommendation: this.getRecommendation(workout, missedStatus),
+            weeklyCoverage
         };
     },
 
@@ -239,23 +733,32 @@ const ConsciousTraining = {
 
     // Adaptar treino baseado no estado do dia
     adaptWorkoutToState(workout, todayState) {
-        const adapted = { ...workout, exercises: [...workout.exercises] };
+        const adapted = {
+            ...workout,
+            exercises: (workout.exercises || []).map(ex => ({ ...ex }))
+        };
+
+        const appendVolumeNote = (note) => {
+            adapted.volumeNote = adapted.volumeNote
+                ? `${adapted.volumeNote} ${note}`
+                : note;
+        };
 
         // Se energia baixa, reduz volume
         if (todayState.energy && todayState.energy <= 4) {
-            adapted.volumeNote = '⚡ Energia baixa detectada. Volume reduzido.';
+            appendVolumeNote('⚡ Energia baixa detectada. Volume reduzido.');
             adapted.exercises = adapted.exercises.slice(0, 4); // Menos exercícios
         }
 
         // Se corpo dolorido, sugere mobilidade
         if (todayState.bodyFeel === 'dolorido') {
-            adapted.volumeNote = '🧘 Corpo pedindo recuperação. Considere mobilidade.';
+            appendVolumeNote('🧘 Corpo pedindo recuperação. Considere mobilidade.');
             adapted.suggestAlternative = 'cardio_core';
         }
 
         // Se explosivo, pode ir mais pesado
         if (todayState.bodyFeel === 'explosivo') {
-            adapted.volumeNote = '🔥 Energia alta! Aproveite para ir mais intenso.';
+            appendVolumeNote('🔥 Energia alta! Aproveite para ir mais intenso.');
         }
 
         return adapted;
@@ -273,13 +776,16 @@ const ConsciousTraining = {
         };
 
         this.lastWorkout = workoutLog;
+        this.recentWorkouts = [workoutLog, ...this.recentWorkouts]
+            .slice(0, 120)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
 
         // Salvar
         if (window.DataSync) {
             await DataSync.saveWorkout(workoutLog);
-        } else {
-            localStorage.setItem('lastWorkout', JSON.stringify(workoutLog));
         }
+        const key = typeof TrackingSystem !== 'undefined' ? TrackingSystem.getStoreKey('lastWorkout') : 'lastWorkout';
+        localStorage.setItem(key, JSON.stringify(workoutLog));
 
         // Sincronizar com Check-in
         if (window.syncTrainingToCheckin) {
@@ -456,14 +962,79 @@ async function proceedToWorkout() {
     }
 
     // 2. Load Workout
-    const { workout, day, missedStatus, recommendation } = ConsciousTraining.getTodayWorkout();
+    const { workout, day, missedStatus, recommendation, weeklyCoverage } = ConsciousTraining.getTodayWorkout();
     const adaptedWorkout = ConsciousTraining.adaptWorkoutToState(workout, ConsciousTraining.todayState);
 
-    renderConsciousWorkout(adaptedWorkout, recommendation);
+    renderConsciousWorkout(adaptedWorkout, recommendation, weeklyCoverage);
+}
+
+function renderWeeklyCoverageCard(workout, weeklyCoverage) {
+    if (!weeklyCoverage || !Array.isArray(weeklyCoverage.byPart) || weeklyCoverage.byPart.length === 0) {
+        return '';
+    }
+
+    const todayParts = new Set();
+    (workout.exercises || []).forEach(exercise => {
+        const parts = Array.isArray(exercise.parts)
+            ? exercise.parts
+            : ConsciousTraining.mapExerciseToParts(exercise.name, exercise.muscle || exercise.target || '');
+        parts.forEach(part => todayParts.add(part));
+    });
+
+    const todayRows = weeklyCoverage.byPart
+        .filter(item => todayParts.has(item.part))
+        .sort((a, b) => b.deficit - a.deficit);
+
+    const otherRows = weeklyCoverage.byPart
+        .filter(item => !todayParts.has(item.part))
+        .sort((a, b) => b.deficit - a.deficit);
+
+    const selectedRows = [...todayRows.slice(0, 6), ...otherRows.slice(0, 2)];
+
+    if (selectedRows.length === 0) return '';
+
+    const calibration = weeklyCoverage.calibration || {};
+    const densityInfo = calibration.density
+        ? ` • ${calibration.density.toFixed(1)}x/sem (28d)`
+        : '';
+    const profileInfo = calibration.label || 'Metas por parte muscular';
+
+    const priorityPartsHtml = (workout.priorityParts || []).length > 0
+        ? `
+            <div class="priority-parts">
+                ${workout.priorityParts.map(item => `
+                    <span class="priority-tag">${item.label}: -${item.deficit} séries</span>
+                `).join('')}
+            </div>
+        `
+        : '';
+
+    return `
+        <div class="weekly-coverage-card">
+            <div class="weekly-coverage-header">
+                <h3>📊 Cobertura Semanal</h3>
+                <span>${profileInfo}${densityInfo}</span>
+            </div>
+            ${priorityPartsHtml}
+            <div class="coverage-list">
+                ${selectedRows.map(item => `
+                    <div class="coverage-row ${item.status} ${todayParts.has(item.part) ? 'today-focus' : ''}">
+                        <div class="coverage-row-head">
+                            <span class="coverage-part">${item.label}${todayParts.has(item.part) ? ' • hoje' : ''}</span>
+                            <span class="coverage-values">${item.done}/${item.target} séries</span>
+                        </div>
+                        <div class="coverage-bar">
+                            <div class="coverage-fill ${item.status}" style="width: ${Math.min(Math.round(item.ratio * 100), 100)}%"></div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 // Renderizar treino consciente
-function renderConsciousWorkout(workout, recommendation) {
+function renderConsciousWorkout(workout, recommendation, weeklyCoverage) {
     const container = document.getElementById('workout-content') ||
         document.getElementById('conscious-workout-container');
     if (!container) return;
@@ -484,6 +1055,8 @@ function renderConsciousWorkout(workout, recommendation) {
         return;
     }
 
+    const weeklyCoverageHtml = renderWeeklyCoverageCard(workout, weeklyCoverage);
+
     container.innerHTML = `
         <div class="conscious-workout">
             <div class="workout-header-conscious">
@@ -498,6 +1071,8 @@ function renderConsciousWorkout(workout, recommendation) {
                     <small>${recommendation.tip}</small>
                 </div>
             ` : ''}
+
+            ${weeklyCoverageHtml}
             
             ${workout.volumeNote ? `
                 <div class="volume-note">
@@ -507,27 +1082,27 @@ function renderConsciousWorkout(workout, recommendation) {
             
             <div class="exercises-list-conscious">
                 ${workout.exercises.map((ex, i) => `
-                    <div class="exercise-card-conscious" data-index="${i}">
+                    <div class="exercise-card-conscious ${ex.isBooster ? 'booster' : ''}" data-index="${i}" data-planned-sets="${ConsciousTraining.parseSets(ex.sets)}" data-muscle="${ex.muscle || ''}" data-exercise-name="${ex.name}">
                         <div class="exercise-main">
                             <span class="exercise-number">${i + 1}</span>
                             <div class="exercise-info">
-                                <h4>${ex.name}</h4>
+                                <h4>${ex.name} ${ex.isBooster ? '<span class="booster-badge">Booster</span>' : ''}</h4>
                                 <p class="exercise-muscle">${ex.muscle}</p>
                             </div>
                             <div class="exercise-sets">
                                 <span>${ex.sets} séries</span>
                             </div>
                         </div>
-                        <p class="exercise-tip">💡 ${ex.tip}</p>
+                        <p class="exercise-tip">${ex.isBooster ? '🎯' : '💡'} ${ex.tip}</p>
                         
                         <div class="exercise-inputs" style="margin-top: 15px; display: flex; gap: 10px;">
                             <div style="flex: 1;">
                                 <label style="font-size: 0.8rem; color: #aaa;">Carga (kg)</label>
-                                <input type="number" class="conscious-input-weight" id="conscious-weight-${i}" placeholder="kg" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                                <input type="number" class="conscious-input-weight" id="conscious-weight-${i}" placeholder="kg" oninput="saveTempWorkoutData()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
                             </div>
                             <div style="flex: 1;">
                                 <label style="font-size: 0.8rem; color: #aaa;">Reps Totais</label>
-                                <input type="number" class="conscious-input-reps" id="conscious-reps-${i}" placeholder="${ex.reps}" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                                <input type="number" class="conscious-input-reps" id="conscious-reps-${i}" placeholder="${ex.reps}" oninput="saveTempWorkoutData()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
                             </div>
                         </div>
 
@@ -554,7 +1129,11 @@ function renderConsciousWorkout(workout, recommendation) {
             </button>
         </div>
     `;
+
+    // Load any previously saved temporary data
+    loadTempWorkoutData();
 }
+
 
 // Marcar exercício como feito
 function markExerciseDone(index) {
@@ -590,11 +1169,15 @@ async function completeConsciousWorkout(workoutId) {
     cards.forEach((card, index) => {
         const weight = card.querySelector(`#conscious-weight-${index}`)?.value;
         const reps = card.querySelector(`#conscious-reps-${index}`)?.value;
-        const name = card.querySelector('h4').textContent;
+        const name = card.dataset.exerciseName || card.querySelector('h4')?.textContent || 'Exercício';
+        const plannedSets = parseInt(card.dataset.plannedSets || '1', 10);
+        const muscle = card.dataset.muscle || card.querySelector('.exercise-muscle')?.textContent || '';
         const feel = exerciseLogs[index]?.feel || 'ok';
 
         exerciseData.push({
             name,
+            muscle,
+            setsPlanned: Number.isNaN(plannedSets) ? 1 : plannedSets,
             weight: weight || 0,
             reps: reps || 0,
             feel
@@ -602,6 +1185,9 @@ async function completeConsciousWorkout(workoutId) {
     });
 
     await ConsciousTraining.logWorkoutComplete(workoutId, exerciseData, feelMap[overallFeel] || 'bom');
+
+    // Clear temporary data after successful save
+    clearTempWorkoutData();
 
     // Mostrar sucesso
     if (typeof showSuccess === 'function') {
@@ -650,6 +1236,64 @@ function showPreWorkoutState() {
     }
 }
 
+// ===== Auto-Save Functions =====
+const TEMP_WORKOUT_KEY = 'consc_temp_workout_data';
+
+function saveTempWorkoutData() {
+    const cards = document.querySelectorAll('.exercise-card-conscious');
+    const tempData = {};
+    const today = new Date().toISOString().split('T')[0];
+
+    cards.forEach((card, index) => {
+        const weight = document.getElementById(`conscious-weight-${index}`)?.value || '';
+        const reps = document.getElementById(`conscious-reps-${index}`)?.value || '';
+        if (weight || reps) {
+            tempData[index] = { weight, reps };
+        }
+    });
+
+    const user = window.FirebaseAuth?.getCurrentUser();
+    const key = user ? `labpessoal_${user.uid}_${TEMP_WORKOUT_KEY}` : TEMP_WORKOUT_KEY;
+    localStorage.setItem(key, JSON.stringify({ date: today, data: tempData }));
+    console.log('💾 Dados temporários salvos');
+}
+
+function loadTempWorkoutData() {
+    const user = window.FirebaseAuth?.getCurrentUser();
+    const key = user ? `labpessoal_${user.uid}_${TEMP_WORKOUT_KEY}` : TEMP_WORKOUT_KEY;
+    const stored = localStorage.getItem(key);
+
+    if (!stored) return;
+
+    try {
+        const { date, data } = JSON.parse(stored);
+        const today = new Date().toISOString().split('T')[0];
+
+        // Only restore if data is from today
+        if (date !== today) {
+            clearTempWorkoutData();
+            return;
+        }
+
+        for (const [index, values] of Object.entries(data)) {
+            const weightInput = document.getElementById(`conscious-weight-${index}`);
+            const repsInput = document.getElementById(`conscious-reps-${index}`);
+            if (weightInput && values.weight) weightInput.value = values.weight;
+            if (repsInput && values.reps) repsInput.value = values.reps;
+        }
+        console.log('✅ Dados temporários restaurados');
+    } catch (e) {
+        console.warn('Erro ao restaurar dados temporários:', e);
+    }
+}
+
+function clearTempWorkoutData() {
+    const user = window.FirebaseAuth?.getCurrentUser();
+    const key = user ? `labpessoal_${user.uid}_${TEMP_WORKOUT_KEY}` : TEMP_WORKOUT_KEY;
+    localStorage.removeItem(key);
+    console.log('🧹 Dados temporários limpos');
+}
+
 // Exportar
 window.ConsciousTraining = ConsciousTraining;
 window.initConsciousTraining = initConsciousTraining;
@@ -659,3 +1303,31 @@ window.markExerciseDone = markExerciseDone;
 window.logExerciseFeel = logExerciseFeel;
 window.completeConsciousWorkout = completeConsciousWorkout;
 window.showPreWorkoutState = showPreWorkoutState;
+window.saveTempWorkoutData = saveTempWorkoutData;
+window.loadTempWorkoutData = loadTempWorkoutData;
+window.clearTempWorkoutData = clearTempWorkoutData;
+
+// Cleanup for logout
+window.resetConsciousTraining = function () {
+    ConsciousTraining.todayState = {
+        bodyFeel: null,
+        mindState: null,
+        sleepQuality: null,
+        energy: null,
+        intuitionNote: ''
+    };
+    ConsciousTraining.lastWorkout = null;
+    ConsciousTraining.recentWorkouts = [];
+    const defaultProfileKey = ConsciousTraining.goalProfiles.defaultProfile;
+    const defaultProfile = ConsciousTraining.goalProfiles.profiles[defaultProfileKey];
+    if (defaultProfile?.targets) {
+        ConsciousTraining.weeklyVolumeTargets = { ...defaultProfile.targets };
+    }
+    ConsciousTraining.activeVolumeProfile = {
+        key: defaultProfileKey,
+        label: defaultProfile?.label || 'Hipertrofia Natural 5x',
+        density: null
+    };
+    clearTempWorkoutData();
+    console.log('🧹 ConsciousTraining state cleared');
+};

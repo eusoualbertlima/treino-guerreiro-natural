@@ -1,8 +1,22 @@
 // Advanced tracking and progress features
 const TrackingSystem = {
+    // Helper to get user-specific storage key
+    getStoreKey(key) {
+        const user = window.FirebaseAuth?.getCurrentUser();
+        return user ? `labpessoal_${user.uid}_${key}` : `labpessoal_${key}`;
+    },
+
     // Get all workout history from localStorage
     getWorkoutHistory() {
-        const history = localStorage.getItem('workoutHistory');
+        // Migration support: try user-specific key first, then fallback to old generic one if not migrated
+        const userKey = this.getStoreKey('workoutHistory');
+        const genericKey = 'workoutHistory';
+
+        let history = localStorage.getItem(userKey);
+        if (!history && !window.FirebaseAuth?.getCurrentUser()) {
+            history = localStorage.getItem(genericKey);
+        }
+
         return history ? JSON.parse(history) : [];
     },
 
@@ -22,7 +36,7 @@ const TrackingSystem = {
         history.push(newEntry);
 
         // Save to main storage
-        localStorage.setItem('workoutHistory', JSON.stringify(history));
+        localStorage.setItem(this.getStoreKey('workoutHistory'), JSON.stringify(history));
 
         // Save to Cloud (Firebase)
         if (window.DataSync) {
@@ -113,6 +127,11 @@ const TrackingSystem = {
         if (document.getElementById('weekVolume')) {
             document.getElementById('weekVolume').textContent = Math.round(volume / 1000) + 'ton';
         }
+
+        // Also ensure holistic data is loaded
+        if (this.holisticHistory.length === 0) {
+            this.loadHolisticData();
+        }
     },
 
     // Get exercise progress (last 10 workouts)
@@ -139,8 +158,8 @@ const TrackingSystem = {
     exportData() {
         const data = {
             workoutHistory: this.getWorkoutHistory(),
-            weight: localStorage.getItem('weight'),
-            programStartDate: localStorage.getItem('programStartDate'),
+            weight: localStorage.getItem(this.getStoreKey('weight')),
+            programStartDate: localStorage.getItem(this.getStoreKey('programStartDate')),
             exportDate: new Date().toISOString()
         };
 
@@ -160,13 +179,13 @@ const TrackingSystem = {
     importData(jsonData) {
         try {
             if (jsonData.workoutHistory) {
-                localStorage.setItem('workoutHistory', JSON.stringify(jsonData.workoutHistory));
+                localStorage.setItem(this.getStoreKey('workoutHistory'), JSON.stringify(jsonData.workoutHistory));
             }
             if (jsonData.weight) {
-                localStorage.setItem('weight', jsonData.weight);
+                localStorage.setItem(this.getStoreKey('weight'), jsonData.weight);
             }
             if (jsonData.programStartDate) {
-                localStorage.setItem('programStartDate', jsonData.programStartDate);
+                localStorage.setItem(this.getStoreKey('programStartDate'), jsonData.programStartDate);
             }
 
             this.updateStats();
@@ -186,14 +205,14 @@ const TrackingSystem = {
     createAutoBackup() {
         const data = {
             workoutHistory: this.getWorkoutHistory(),
-            weight: localStorage.getItem('weight'),
-            programStartDate: localStorage.getItem('programStartDate'),
+            weight: localStorage.getItem(this.getStoreKey('weight')),
+            programStartDate: localStorage.getItem(this.getStoreKey('programStartDate')),
             backupDate: new Date().toISOString()
         };
 
         // Save to backup key
-        localStorage.setItem('workoutBackup', JSON.stringify(data));
-        localStorage.setItem('lastBackupDate', new Date().toISOString());
+        localStorage.setItem(this.getStoreKey('workoutBackup'), JSON.stringify(data));
+        localStorage.setItem(this.getStoreKey('lastBackupDate'), new Date().toISOString());
 
         // Check if should auto-download (weekly)
         this.checkWeeklyAutoDownload();
@@ -201,7 +220,7 @@ const TrackingSystem = {
 
     // Try to recover from backup if main data is lost
     tryRecoverFromBackup() {
-        const backup = localStorage.getItem('workoutBackup');
+        const backup = localStorage.getItem(this.getStoreKey('workoutBackup'));
         if (!backup) return false;
 
         try {
@@ -222,7 +241,7 @@ const TrackingSystem = {
 
     // Check if should auto-download backup (weekly)
     checkWeeklyAutoDownload() {
-        const lastDownload = localStorage.getItem('lastAutoDownload');
+        const lastDownload = localStorage.getItem(this.getStoreKey('lastAutoDownload'));
         const now = new Date();
 
         if (!lastDownload) {
@@ -236,79 +255,80 @@ const TrackingSystem = {
         // Auto-download every 7 days
         if (daysSince >= 7) {
             this.exportData();
-            localStorage.setItem('lastAutoDownload', now.toISOString());
+            localStorage.setItem(this.getStoreKey('lastAutoDownload'), now.toISOString());
 
             // Show notification
             setTimeout(() => {
                 alert('📥 Backup semanal automático!\n\nSeus dados foram baixados para segurança.');
             }, 1000);
         }
-        // Holistic data storage
-        holisticHistory: [],
+    },
 
-            // Load holistic data from cloud
-            async loadHolisticData() {
-            if (window.DataSync) {
-                const checkins = await DataSync.getAllCheckins();
-                this.holisticHistory = Object.values(checkins).sort((a, b) => new Date(b.date) - new Date(a.date));
-                console.log(`🧘 Loaded ${this.holisticHistory.length} holistic check-ins`);
-                // Trigger dashboard refresh if active
-                if (document.getElementById('dashboard-container')) {
-                    document.getElementById('dashboard-container').innerHTML = renderDashboard();
-                }
+    // Holistic data storage
+    holisticHistory: [],
+
+    // Load holistic data from cloud
+    async loadHolisticData() {
+        if (window.DataSync) {
+            const checkins = await DataSync.getAllCheckins();
+            this.holisticHistory = Object.values(checkins).sort((a, b) => new Date(b.date) - new Date(a.date));
+            console.log(`🧘 Loaded ${this.holisticHistory.length} holistic check-ins`);
+            // Trigger dashboard refresh if active
+            if (document.getElementById('dashboard-container')) {
+                document.getElementById('dashboard-container').innerHTML = renderDashboard();
             }
-        },
+        }
+    },
 
-        // Get stats for last X days
-        getHolisticStats(days = 7) {
-            const history = this.holisticHistory.slice(0, days);
-            const count = history.length || 1; // avoid division by zero
+    // Get stats for last X days
+    getHolisticStats(days = 7) {
+        const history = this.holisticHistory.slice(0, days);
+        const count = history.length || 1; // avoid division by zero
 
-            // Initialize sums
-            const stats = {
-                energy: 0,
-                motivation: 0,
-                sleep: { hours: 0, quality: 0 },
-                habits: {
-                    meditation: 0,
-                    sun: 0,
-                    running: 0,
-                    coldShower: 0,
-                    goodFats: 0
-                },
-                protein: 0
-            };
+        // Initialize sums
+        const stats = {
+            energy: 0,
+            motivation: 0,
+            sleep: { hours: 0, quality: 0 },
+            habits: {
+                meditation: 0,
+                sun: 0,
+                running: 0,
+                coldShower: 0,
+                goodFats: 0
+            },
+            protein: 0
+        };
 
-            // Sum up data
-            history.forEach(entry => {
-                if (entry.energy) stats.energy += parseInt(entry.energy);
-                if (entry.motivation) stats.motivation += parseInt(entry.motivation);
+        // Sum up data
+        history.forEach(entry => {
+            if (entry.energy) stats.energy += parseInt(entry.energy);
+            if (entry.motivation) stats.motivation += parseInt(entry.motivation);
 
-                if (entry.sleep) {
-                    if (entry.sleep.hours) stats.sleep.hours += parseFloat(entry.sleep.hours);
-                    if (entry.sleep.quality) stats.sleep.quality += parseInt(entry.sleep.quality);
-                }
+            if (entry.sleep) {
+                if (entry.sleep.hours) stats.sleep.hours += parseFloat(entry.sleep.hours);
+                if (entry.sleep.quality) stats.sleep.quality += parseInt(entry.sleep.quality);
+            }
 
-                if (entry.meditation?.did) stats.habits.meditation++;
-                if (entry.sun?.did) stats.habits.sun++;
-                if (entry.running?.did) stats.habits.running++; // deprecated field support if any
-                if (entry.coldHeat?.coldShower) stats.habits.coldShower++;
-                if (entry.nutrition?.goodFats) stats.habits.goodFats++;
-                if (entry.nutrition?.protein) stats.protein += parseInt(entry.nutrition.protein);
-            });
+            if (entry.meditation?.did) stats.habits.meditation++;
+            if (entry.sun?.did) stats.habits.sun++;
+            if (entry.running?.did) stats.habits.running++; // deprecated field support if any
+            if (entry.coldHeat?.coldShower) stats.habits.coldShower++;
+            if (entry.nutrition?.goodFats) stats.habits.goodFats++;
+            if (entry.nutrition?.protein) stats.protein += parseInt(entry.nutrition.protein);
+        });
 
-            // Calculate averages
-            return {
-                daysAnalyzed: count,
-                avgEnergy: (stats.energy / count).toFixed(1),
-                avgMotivation: (stats.motivation / count).toFixed(1),
-                avgSleep: (stats.sleep.hours / count).toFixed(1),
-                avgSleepQuality: (stats.sleep.quality / count).toFixed(1),
-                avgProtein: Math.round(stats.protein / count),
-                habitsCount: stats.habits
-            };
-        },
-    }
+        // Calculate averages
+        return {
+            daysAnalyzed: count,
+            avgEnergy: (stats.energy / count).toFixed(1),
+            avgMotivation: (stats.motivation / count).toFixed(1),
+            avgSleep: (stats.sleep.hours / count).toFixed(1),
+            avgSleepQuality: (stats.sleep.quality / count).toFixed(1),
+            avgProtein: Math.round(stats.protein / count),
+            habitsCount: stats.habits
+        };
+    },
 };
 
 // Exercise variation system
@@ -337,9 +357,10 @@ const VariationSystem = {
 
     // Get current cycle week (1-6)
     getCurrentCycle() {
-        const startDate = localStorage.getItem('programStartDate');
+        const key = TrackingSystem.getStoreKey('programStartDate');
+        const startDate = localStorage.getItem(key);
         if (!startDate) {
-            localStorage.setItem('programStartDate', new Date().toISOString());
+            localStorage.setItem(key, new Date().toISOString());
             return 1;
         }
 
@@ -364,6 +385,237 @@ const VariationSystem = {
         return options[cycle % options.length] || exerciseName;
     }
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PERIODIZATION SYSTEM - Ciclos Naturais do Corpo
+// Baseado em: Periodização Ondulante + Autorregulação
+// ═══════════════════════════════════════════════════════════════════════════
+const PeriodizationSystem = {
+    // Fases do mesociclo (5 semanas)
+    phases: {
+        1: { name: 'Acumulação 1', focus: 'volume', reps: '10-15', rir: '3-4', intensity: 0.7, description: 'Volume moderado, construindo base' },
+        2: { name: 'Acumulação 2', focus: 'volume', reps: '8-12', rir: '2-3', intensity: 0.75, description: 'Volume aumentando, adaptação' },
+        3: { name: 'Intensificação 1', focus: 'força', reps: '6-10', rir: '2', intensity: 0.8, description: 'Mais carga, menos reps' },
+        4: { name: 'Intensificação 2', focus: 'força', reps: '5-8', rir: '1-2', intensity: 0.85, description: 'Pico de intensidade' },
+        5: { name: 'Deload', focus: 'recuperação', reps: '10-15', rir: '4-5', intensity: 0.5, description: 'Recuperação ativa, 50% do volume' }
+    },
+
+    // Pegar semana atual do ciclo
+    getCurrentWeek() {
+        const key = TrackingSystem.getStoreKey('periodizationStart');
+        const startDate = localStorage.getItem(key);
+
+        if (!startDate) {
+            localStorage.setItem(key, new Date().toISOString());
+            return 1;
+        }
+
+        const start = new Date(startDate);
+        const now = new Date();
+        const weeks = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000));
+
+        return (weeks % 5) + 1; // Ciclo de 5 semanas
+    },
+
+    // Pegar fase atual
+    getCurrentPhase() {
+        const week = this.getCurrentWeek();
+        return this.phases[week];
+    },
+
+    // Reset do ciclo (para quando quiser recomeçar)
+    resetCycle() {
+        const key = TrackingSystem.getStoreKey('periodizationStart');
+        localStorage.setItem(key, new Date().toISOString());
+        console.log('🔄 Ciclo de periodização resetado!');
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FATIGUE TRACKING - Detecta quando precisa de deload
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Calcular índice de fadiga baseado nos últimos treinos
+    calculateFatigueIndex() {
+        const history = TrackingSystem.getWorkoutHistory();
+        const last14Days = history.filter(w => {
+            const wDate = new Date(w.date);
+            const twoWeeksAgo = new Date();
+            twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+            return wDate >= twoWeeksAgo;
+        });
+
+        if (last14Days.length < 3) return { level: 'low', score: 0, recommendation: 'Continue treinando normalmente' };
+
+        // Fatores de fadiga
+        let fatigueScore = 0;
+
+        // 1. Frequência alta = mais fadiga
+        const daysPerWeek = last14Days.length / 2;
+        if (daysPerWeek >= 6) fatigueScore += 30;
+        else if (daysPerWeek >= 5) fatigueScore += 20;
+        else if (daysPerWeek >= 4) fatigueScore += 10;
+
+        // 2. Volume semanal
+        const weekVolume = TrackingSystem.getWeekVolume();
+        if (weekVolume > 50000) fatigueScore += 25;
+        else if (weekVolume > 30000) fatigueScore += 15;
+
+        // 3. Dias consecutivos
+        const streak = TrackingSystem.getStreak();
+        if (streak >= 10) fatigueScore += 25;
+        else if (streak >= 7) fatigueScore += 15;
+        else if (streak >= 5) fatigueScore += 5;
+
+        // 4. Checar dados holísticos (se disponíveis)
+        const holistic = TrackingSystem.getHolisticStats(7);
+        if (holistic.avgEnergy && parseFloat(holistic.avgEnergy) < 5) fatigueScore += 20;
+        if (holistic.avgSleep && parseFloat(holistic.avgSleep) < 6) fatigueScore += 15;
+
+        // Determinar nível
+        let level, recommendation;
+        if (fatigueScore >= 70) {
+            level = 'high';
+            recommendation = '🔴 DELOAD RECOMENDADO. Corpo precisa de recuperação. Reduz volume 50% essa semana.';
+        } else if (fatigueScore >= 45) {
+            level = 'medium';
+            recommendation = '🟡 Fadiga moderada. Considera um dia extra de descanso ou reduzir intensidade.';
+        } else {
+            level = 'low';
+            recommendation = '🟢 Fadiga baixa. Continua progredindo normalmente!';
+        }
+
+        return { level, score: fatigueScore, recommendation };
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LOAD SUGGESTION - Sugere carga baseada em progressão
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Sugerir carga para um exercício
+    suggestLoad(exerciseName) {
+        const progress = TrackingSystem.getExerciseProgress(exerciseName);
+        const phase = this.getCurrentPhase();
+
+        if (progress.length === 0) {
+            return {
+                weight: null,
+                suggestion: 'Primeiro treino! Comece leve para sentir o exercício.',
+                isNewExercise: true
+            };
+        }
+
+        // Pegar última carga usada
+        const lastWeight = progress[progress.length - 1].weight;
+
+        // Calcular tendência (aumento médio)
+        let avgIncrease = 0;
+        if (progress.length >= 2) {
+            const increases = [];
+            for (let i = 1; i < progress.length; i++) {
+                increases.push(progress[i].weight - progress[i - 1].weight);
+            }
+            avgIncrease = increases.reduce((a, b) => a + b, 0) / increases.length;
+        }
+
+        // Sugestão baseada na fase
+        let suggestedWeight, suggestion;
+
+        if (phase.name.includes('Deload')) {
+            suggestedWeight = Math.round(lastWeight * 0.6);
+            suggestion = `🧘 DELOAD: Use ${suggestedWeight}kg (~60% da carga). Foco em técnica.`;
+        } else if (phase.focus === 'volume') {
+            // Fases de acumulação: manter ou aumentar levemente
+            suggestedWeight = avgIncrease > 0 ? lastWeight + 2.5 : lastWeight;
+            suggestion = `📈 ACUMULAÇÃO: Manter ${lastWeight}kg ou tenta ${suggestedWeight}kg. Foco no volume.`;
+        } else {
+            // Fases de intensificação: tentar aumentar
+            suggestedWeight = lastWeight + 2.5;
+            suggestion = `💪 INTENSIFICAÇÃO: Tenta ${suggestedWeight}kg! Menos reps, mais carga.`;
+        }
+
+        return {
+            lastWeight,
+            suggestedWeight,
+            suggestion,
+            phase: phase.name,
+            avgProgress: avgIncrease.toFixed(1),
+            isNewExercise: false
+        };
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ADAPTIVE RECOMMENDATIONS - Ajusta baseado no estado
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Recomendação adaptativa para o treino do dia
+    getAdaptiveRecommendation(userState = {}) {
+        const phase = this.getCurrentPhase();
+        const fatigue = this.calculateFatigueIndex();
+        const week = this.getCurrentWeek();
+
+        let recommendation = {
+            phase: phase.name,
+            focus: phase.focus,
+            targetReps: phase.reps,
+            targetRir: phase.rir,
+            volumeMultiplier: 1,
+            intensityMultiplier: phase.intensity,
+            message: phase.description
+        };
+
+        // Adaptar baseado no estado do usuário
+        if (userState.energy) {
+            if (userState.energy <= 3) {
+                recommendation.volumeMultiplier = 0.7;
+                recommendation.message = '⚡ Energia baixa detectada. Treino reduzido em 30%.';
+            } else if (userState.energy >= 8) {
+                recommendation.volumeMultiplier = 1.1;
+                recommendation.message = '🔥 Energia ALTA! Pode dar mais gás hoje!';
+            }
+        }
+
+        // Adaptar baseado na fadiga
+        if (fatigue.level === 'high') {
+            recommendation.volumeMultiplier *= 0.5;
+            recommendation.message = fatigue.recommendation;
+        } else if (fatigue.level === 'medium' && week !== 5) {
+            recommendation.volumeMultiplier *= 0.8;
+        }
+
+        // Adaptar baseado em dor/desconforto
+        if (userState.bodyFeel === 'dolorido') {
+            recommendation.volumeMultiplier *= 0.8;
+            recommendation.targetRir = '3-4';
+            recommendation.message = '🧘 Corpo dolorido. Menos intensidade, mais recuperação.';
+        }
+
+        return recommendation;
+    },
+
+    // Obter resumo do ciclo atual
+    getCycleSummary() {
+        const week = this.getCurrentWeek();
+        const phase = this.getCurrentPhase();
+        const fatigue = this.calculateFatigueIndex();
+        const weekWorkouts = TrackingSystem.getWeekWorkouts();
+
+        return {
+            currentWeek: week,
+            totalWeeks: 5,
+            phase: phase.name,
+            focus: phase.focus,
+            description: phase.description,
+            fatigueLevel: fatigue.level,
+            fatigueScore: fatigue.score,
+            fatigueRecommendation: fatigue.recommendation,
+            weeklyWorkouts: weekWorkouts.length,
+            daysUntilDeload: week < 5 ? (5 - week) * 7 : 0
+        };
+    }
+};
+
+// Tornar global
+window.PeriodizationSystem = PeriodizationSystem;
 
 // Chart rendering (simple text-based progress indicator)
 function renderProgressChart(exerciseName) {
@@ -391,62 +643,46 @@ function renderProgressChart(exerciseName) {
     return chart;
 }
 
-// Holistic data storage
 
-
-// ... existing exportData ... (rest of the file remains, I will just replace the top part and renderDashboard)
-
-// Update dashboard stats
-updateStats() {
-    const weekWorkouts = this.getWeekWorkouts();
-    const streak = this.getStreak();
-    const volume = this.getWeekVolume();
-
-    // Update UI if elements exist
-    if (document.getElementById('weekWorkouts')) document.getElementById('weekWorkouts').textContent = weekWorkouts.length;
-    if (document.getElementById('currentStreak')) document.getElementById('currentStreak').textContent = streak;
-    if (document.getElementById('weekVolume')) document.getElementById('weekVolume').textContent = Math.round(volume / 1000) + 'ton';
-
-    // Also ensure holistic data is loaded
-    if (this.holisticHistory.length === 0) {
-        this.loadHolisticData();
-    }
-},
-// ... existing getExerciseProgress ...
-getExerciseProgress(exerciseName) {
-    const history = this.getWorkoutHistory();
-    const exerciseData = [];
-    history.forEach(workout => {
-        workout.exercises.forEach(ex => {
-            if (ex.name === exerciseName && ex.sets && ex.sets.length > 0) {
-                const maxWeight = Math.max(...ex.sets.map(s => s.weight || 0));
-                exerciseData.push({ date: workout.date, weight: maxWeight });
-            }
-        });
-    });
-    return exerciseData.slice(-10);
-},
-// ... existing functions (exportData to getWeekVolume) ...
-// Note: Since replace_file_content replaces a chunk, I need to match the original structure.
-// The previous tool usage showed lines 1-397. This is a large chunk replacement.
-
-// I will replace `renderDashboard` specifically with the new version.
 
 // Dashboard render
 function renderDashboard() {
     const weekWorkouts = TrackingSystem.getWeekWorkouts();
     const streak = TrackingSystem.getStreak();
     const volume = TrackingSystem.getWeekVolume();
-    const cycle = VariationSystem.getCurrentCycle();
     const holistic = TrackingSystem.getHolisticStats(7); // Last 7 days stats
 
-    let phaseInfo = '';
-    if (cycle <= 3) {
-        phaseInfo = `<span class="phase-accumulation">Fase Acumulação (Sem ${cycle}/3)</span>`;
-    } else if (cycle <= 5) {
-        phaseInfo = `<span class="phase-intensification">Fase Intensificação (Sem ${cycle - 3}/2)</span>`;
+    // NOVO: Usar PeriodizationSystem
+    const cycleSummary = window.PeriodizationSystem ? PeriodizationSystem.getCycleSummary() : null;
+    const phase = cycleSummary ? cycleSummary.phase : 'Acumulação';
+    const week = cycleSummary ? cycleSummary.currentWeek : 1;
+    const fatigue = cycleSummary ? cycleSummary.fatigueLevel : 'low';
+    const fatigueRec = cycleSummary ? cycleSummary.fatigueRecommendation : '';
+
+    // Fase colorida baseada no tipo
+    let phaseClass, phaseColor;
+    if (phase.includes('Acumulação')) {
+        phaseClass = 'phase-accumulation';
+        phaseColor = '#22c55e';
+    } else if (phase.includes('Intensificação')) {
+        phaseClass = 'phase-intensification';
+        phaseColor = '#f59e0b';
     } else {
-        phaseInfo = `<span class="phase-deload">Fase Desload (Sem 1/1)</span>`;
+        phaseClass = 'phase-deload';
+        phaseColor = '#3b82f6';
+    }
+
+    // Fadiga indicator
+    let fatigueIcon, fatigueColorStyle;
+    if (fatigue === 'high') {
+        fatigueIcon = '🔴';
+        fatigueColorStyle = 'color: #ef4444;';
+    } else if (fatigue === 'medium') {
+        fatigueIcon = '🟡';
+        fatigueColorStyle = 'color: #f59e0b;';
+    } else {
+        fatigueIcon = '🟢';
+        fatigueColorStyle = 'color: #22c55e;';
     }
 
     return `
@@ -476,7 +712,7 @@ function renderDashboard() {
                 </div>
             </div>
             
-            <!-- Holistic Stats (NEW) -->
+            <!--Holistic Stats(NEW)-- >
             <div class="stat-card">
                 <div class="stat-icon">😴</div>
                 <div class="stat-info">
@@ -501,7 +737,7 @@ function renderDashboard() {
                 </div>
             </div>
 
-            <!-- Habits Grid -->
+            <!--Habits Grid-- >
             <div class="stat-card full-width habits-summary">
                 <div class="stat-info" style="width:100%">
                     <h3>🧘 Hábitos (Últimos 7 dias)</h3>
@@ -526,12 +762,80 @@ function renderDashboard() {
                 </div>
             </div>
             
+             <!--Milestones(Marcos) -->
+            <div class="stat-card full-width">
+               <div class="stat-info" style="width:100%">
+                    <h3>🎯 Marcos e Metas</h3>
+                    <div class="milestones-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px;">
+                        <div class="milestone-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: var(--text-secondary); font-size: 0.8rem;">3 meses</span>
+                            <strong style="color: var(--primary);">71-73kg</strong>
+                        </div>
+                        <div class="milestone-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: var(--text-secondary); font-size: 0.8rem;">6 meses</span>
+                            <strong style="color: var(--primary);">75-77kg</strong>
+                        </div>
+                        <div class="milestone-item" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: var(--text-secondary); font-size: 0.8rem;">12 meses</span>
+                            <strong style="color: var(--primary);">80-82kg</strong>
+                        </div>
+                         <div class="milestone-item highlight" style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); padding: 10px; border-radius: 8px; text-align: center;">
+                            <span style="display:block; color: #fbbf24; font-size: 0.8rem;">18 meses</span>
+                            <strong style="color: #fbbf24;">85-90kg 🔥</strong>
+                        </div>
+                    </div>
+               </div>
+            </div>
+
+            <!--Strength Goals-- >
+            <div class="stat-card full-width">
+               <div class="stat-info" style="width:100%">
+                    <h3>💪 Metas de Força (12 meses)</h3>
+                    <div class="strength-goals-grid" style="display: grid; gap: 10px; margin-top: 10px;">
+                         <div class="strength-card" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Agachamento</span>
+                            <div>
+                                <span style="font-size: 0.85rem; color: #666; margin-right: 5px;">Meta:</span>
+                                <strong style="color: var(--primary);">145kg</strong>
+                            </div>
+                        </div>
+                        <div class="strength-card" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">Supino</span>
+                             <div>
+                                <span style="font-size: 0.85rem; color: #666; margin-right: 5px;">Meta:</span>
+                                <strong style="color: var(--primary);">95kg</strong>
+                            </div>
+                        </div>
+                        <div class="strength-card" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-secondary);">Levantamento Terra</span>
+                             <div>
+                                <span style="font-size: 0.85rem; color: #666; margin-right: 5px;">Meta:</span>
+                                <strong style="color: var(--primary);">165kg</strong>
+                            </div>
+                        </div>
+                    </div>
+               </div>
+            </div>
+
             <div class="stat-card full-width">
                 <div class="stat-icon">📅</div>
                 <div class="stat-info">
-                    <h3>Ciclo Atual</h3>
-                    <p class="stat-value">Semana ${cycle}/6</p>
-                    ${phaseInfo}
+                    <h3>Ciclo de Periodização</h3>
+                    <p class="stat-value" style="color: ${phaseColor};">Semana ${week}/5 - ${phase}</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                        ${cycleSummary ? cycleSummary.description : ''}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="stat-card full-width">
+                <div class="stat-icon">${fatigueIcon}</div>
+                <div class="stat-info">
+                    <h3>Nível de Fadiga</h3>
+                    <p class="stat-value" style="${fatigueColorStyle}">${fatigue.toUpperCase()}</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">
+                        ${fatigueRec}
+                    </p>
                 </div>
             </div>
         </div>
@@ -560,7 +864,7 @@ function showWeeklyReport() {
     const volume = TrackingSystem.getWeekVolume();
 
     let report = `
-        <div class="weekly-report">
+        < div class="weekly-report" >
             <h2>📊 Relatório Semanal</h2>
             <p class="report-period">${new Date().toLocaleDateString('pt-BR')}</p>
             
@@ -588,8 +892,8 @@ function showWeeklyReport() {
             </div>
             
             <button onclick="closeDashboard()" class="action-btn">Fechar</button>
-        </div>
-    `;
+        </div >
+        `;
 
     document.getElementById('workout-content').innerHTML = report;
 }
@@ -634,10 +938,10 @@ function showProgressCharts() {
 
     keyExercises.forEach(ex => {
         chartsHTML += `
-            <div class="chart-section">
-                <h3>${ex}</h3>
+        < div class="chart-section" >
+            <h3>${ex}</h3>
                 ${renderProgressChart(ex)}
-            </div>
+            </div >
         `;
     });
 
@@ -659,12 +963,18 @@ window.addEventListener('load', () => {
     TrackingSystem.updateStats();
 
     // Check backup status
-    const backupDate = localStorage.getItem('lastBackupDate');
+    const backupDate = localStorage.getItem(TrackingSystem.getStoreKey('lastBackupDate'));
     if (backupDate) {
         const daysOld = Math.floor((new Date() - new Date(backupDate)) / (1000 * 60 * 60 * 24));
         console.log(`📦 Último backup: ${daysOld} dia(s) atrás`);
     }
 });
+
+// Global cleanup for logout
+window.resetTrackingSystem = function () {
+    TrackingSystem.holisticHistory = [];
+    console.log('🧹 TrackingSystem state cleared');
+};
 
 // Import backup handlers
 function importBackup() {
