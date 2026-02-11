@@ -528,6 +528,10 @@ function showTab(tabName) {
         }
     }
 
+    if (tabName === 'progresso' && typeof initProgressTab !== 'undefined') {
+        initProgressTab();
+    }
+
     // Initialize Conscious Training for treino tab
     if (tabName === 'treino' && typeof initConsciousTraining !== 'undefined') {
         initConsciousTraining();

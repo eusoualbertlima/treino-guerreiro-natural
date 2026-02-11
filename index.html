@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="experiments.css">
     <link rel="stylesheet" href="affirmations.css">
     <link rel="stylesheet" href="conscious-training.css">
+    <link rel="stylesheet" href="progress-tab.css">
 
     <!-- Firebase SDK (free Spark plan) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -32,6 +33,7 @@
     <script src="experiments.js?v=2"></script>
     <script src="affirmations.js"></script>
     <script src="conscious-training.js"></script>
+    <script src="progress-tab.js"></script>
     <script src="natural-hacks.js"></script>
 </head>
 
@@ -60,6 +62,7 @@
             <button class="tab active" onclick="showTab('treino')">🏋️ Treino</button>
             <button class="tab" onclick="showTab('experiments')">🧪 Experimentos</button>
             <button class="tab" onclick="showTab('dashboard')">📈 Dashboard</button>
+            <button class="tab" onclick="showTab('progresso')">📊 Progresso</button>
         </div>
 
         <!-- Check-in Tab (NEW) -->
@@ -301,6 +304,15 @@
             </div>
         </div>
 
+        <!-- Progresso Tab (NEW) -->
+        <div id="progresso" class="tab-content">
+            <div id="progress-content">
+                <div class="progress-loading">
+                    <p>Carregando evolução...</p>
+                </div>
+            </div>
+        </div>
+
 
 
         <!-- Experiments/Lab Tab -->
@@ -416,7 +428,7 @@
             <span class="icon">🥩</span>
             <span class="label">Nutrição</span>
         </button>
-        <button class="nav-btn" onclick="showTab('dashboard')">
+        <button class="nav-btn" onclick="showTab('progresso')">
             <span class="icon">📊</span>
             <span class="label">Progresso</span>
         </button>
@@ -446,12 +458,14 @@
             // Hide all tab contents first
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
+                tab.style.display = 'none';
             });
 
             // Show the selected tab
             const targetTab = document.getElementById(tabName);
             if (targetTab) {
                 targetTab.classList.add('active');
+                targetTab.style.display = 'block';
             }
 
             // Call original function if it exists (for treino tab)
@@ -466,6 +480,8 @@
                 if (typeof initExperimentsTab === 'function') initExperimentsTab();
             } else if (tabName === 'affirmations-tab') {
                 if (typeof initAffirmationsTab === 'function') initAffirmationsTab();
+            } else if (tabName === 'progresso') {
+                if (typeof initProgressTab === 'function') initProgressTab();
             } else if (tabName === 'dashboard') {
                 // Ensure dashboard is rendered
                 const container = document.getElementById('dashboard-container');

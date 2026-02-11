@@ -307,6 +307,146 @@ const ConsciousTraining = {
         return first ? Math.max(1, parseInt(first[0], 10)) : 1;
     },
 
+    parseRepsRange(repsValue) {
+        const raw = this.normalizeText(repsValue);
+        if (!raw) return null;
+
+        const numbers = raw.match(/\d+/g);
+        if (!numbers || numbers.length === 0) return null;
+
+        const first = parseInt(numbers[0], 10);
+        const second = numbers.length > 1 ? parseInt(numbers[1], 10) : first;
+        const min = Math.min(first, second);
+        const max = Math.max(first, second);
+
+        return { min, max };
+    },
+
+    toNumber(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    },
+
+    getExerciseLoadIncrement(exerciseName = '', muscleHint = '') {
+        const normalized = `${this.normalizeText(exerciseName)} ${this.normalizeText(muscleHint)}`;
+        const lowerBodyKeywords = [
+            'agach',
+            'leg press',
+            'terra',
+            'stiff',
+            'panturrilha',
+            'cadeira extensora',
+            'flexora',
+            'hip thrust',
+            'afundo',
+            'passada'
+        ];
+
+        return lowerBodyKeywords.some(keyword => normalized.includes(keyword)) ? 5 : 2.5;
+    },
+
+    extractLoggedSets(exerciseLog) {
+        if (!exerciseLog) return [];
+
+        if (Array.isArray(exerciseLog.sets)) {
+            return exerciseLog.sets.map((set, index) => ({
+                setNumber: set?.setNumber || index + 1,
+                weight: this.toNumber(set?.weight),
+                reps: this.toNumber(set?.reps),
+                completed: typeof set?.completed === 'boolean'
+                    ? set.completed
+                    : (this.toNumber(set?.weight) > 0 || this.toNumber(set?.reps) > 0)
+            })).filter(set => set.weight > 0 || set.reps > 0 || set.completed);
+        }
+
+        const weight = this.toNumber(exerciseLog.weight);
+        const reps = this.toNumber(exerciseLog.reps);
+        if (weight > 0 || reps > 0) {
+            return [{ setNumber: 1, weight, reps, completed: true }];
+        }
+
+        return [];
+    },
+
+    getLatestExerciseLog(exerciseName, muscleHint = '') {
+        const normalizedTarget = this.normalizeText(exerciseName);
+        if (!normalizedTarget) return null;
+
+        const workouts = this.getMergedWorkouts();
+
+        for (const workout of workouts) {
+            const exercises = Array.isArray(workout.exercises) ? workout.exercises : [];
+            for (const exercise of exercises) {
+                const currentName = this.extractExerciseName(exercise);
+                const normalizedName = this.normalizeText(currentName);
+                if (normalizedName !== normalizedTarget) continue;
+
+                const sets = this.extractLoggedSets(exercise)
+                    .filter(set => set.completed && (set.weight > 0 || set.reps > 0));
+                if (sets.length === 0) continue;
+
+                const maxWeight = Math.max(...sets.map(set => set.weight || 0));
+                const avgReps = Math.round(sets.reduce((sum, set) => sum + (set.reps || 0), 0) / sets.length);
+                const totalVolume = sets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
+
+                return {
+                    date: workout.date,
+                    workoutId: workout.id || workout.day || '',
+                    exerciseName: currentName,
+                    muscle: exercise?.muscle || muscleHint || '',
+                    sets,
+                    maxWeight,
+                    avgReps,
+                    totalVolume
+                };
+            }
+        }
+
+        return null;
+    },
+
+    getProgressionSuggestion(exerciseName, targetReps, muscleHint = '') {
+        const latest = this.getLatestExerciseLog(exerciseName, muscleHint);
+        if (!latest) return null;
+
+        const repsRange = this.parseRepsRange(targetReps);
+        const increment = this.getExerciseLoadIncrement(exerciseName, muscleHint);
+        let action = 'maintain';
+        let suggestedWeight = latest.maxWeight;
+
+        if (repsRange) {
+            if (latest.avgReps >= repsRange.max) {
+                action = 'increase';
+                suggestedWeight = latest.maxWeight + increment;
+            } else if (latest.avgReps < repsRange.min - 1) {
+                action = 'repeat';
+                suggestedWeight = latest.maxWeight;
+            }
+        }
+
+        const recommendationLabel = action === 'increase'
+            ? `Subir para ${suggestedWeight}kg`
+            : action === 'repeat'
+                ? `Repetir ${suggestedWeight}kg`
+                : `Manter ${suggestedWeight}kg`;
+
+        return {
+            action,
+            suggestedWeight,
+            increment,
+            repsRange,
+            recommendationLabel,
+            latest
+        };
+    },
+
+    formatDisplayDate(dateStr) {
+        if (!dateStr) return '';
+        const parsed = new Date(dateStr);
+        if (Number.isNaN(parsed.getTime())) return dateStr;
+        return parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    },
+
     getWeekStartDate(referenceDate = new Date()) {
         const start = new Date(referenceDate);
         start.setHours(0, 0, 0, 0);
@@ -331,12 +471,19 @@ const ConsciousTraining = {
             const workoutDate = new Date(workout.date);
             if (Number.isNaN(workoutDate.getTime())) return;
 
+            const workoutType = workout.workoutType || workout.day || '';
+            const exerciseSignature = Array.isArray(workout.exercises)
+                ? workout.exercises
+                    .map(exercise => this.normalizeText(this.extractExerciseName(exercise)))
+                    .filter(Boolean)
+                    .slice(0, 8)
+                    .join('|')
+                : '';
             const key = [
-                workout.id || '',
-                workout.timestamp || '',
                 workout.date,
-                workout.day || '',
-                Array.isArray(workout.exercises) ? workout.exercises.length : 0
+                workoutType,
+                Array.isArray(workout.exercises) ? workout.exercises.length : 0,
+                exerciseSignature
             ].join('|');
 
             if (seen.has(key)) return;
@@ -409,7 +556,11 @@ const ConsciousTraining = {
 
     extractExerciseSets(exerciseLog) {
         if (!exerciseLog) return 0;
-        if (Array.isArray(exerciseLog.sets)) return exerciseLog.sets.length;
+        if (Array.isArray(exerciseLog.sets)) {
+            const completed = this.extractLoggedSets(exerciseLog)
+                .filter(set => set.completed && (set.weight > 0 || set.reps > 0));
+            return completed.length;
+        }
         if (typeof exerciseLog.sets === 'number' || typeof exerciseLog.sets === 'string') {
             return this.parseSets(exerciseLog.sets);
         }
@@ -769,6 +920,8 @@ const ConsciousTraining = {
         const today = new Date().toISOString().split('T')[0];
         const workoutLog = {
             id: workoutId,
+            workoutType: workoutId,
+            day: workoutId,
             date: today,
             exercises: exerciseLogs,
             overallFeel, // 'incrivel', 'bom', 'ok', 'ruim'
@@ -786,6 +939,21 @@ const ConsciousTraining = {
         }
         const key = typeof TrackingSystem !== 'undefined' ? TrackingSystem.getStoreKey('lastWorkout') : 'lastWorkout';
         localStorage.setItem(key, JSON.stringify(workoutLog));
+
+        if (typeof TrackingSystem !== 'undefined' && typeof TrackingSystem.getWorkoutHistory === 'function') {
+            const history = TrackingSystem.getWorkoutHistory();
+            history.push({
+                ...workoutLog,
+                completed: true
+            });
+            localStorage.setItem(TrackingSystem.getStoreKey('workoutHistory'), JSON.stringify(history));
+            if (typeof TrackingSystem.createAutoBackup === 'function') {
+                TrackingSystem.createAutoBackup();
+            }
+            if (typeof TrackingSystem.updateStats === 'function') {
+                TrackingSystem.updateStats();
+            }
+        }
 
         // Sincronizar com Check-in
         if (window.syncTrainingToCheckin) {
@@ -1033,6 +1201,51 @@ function renderWeeklyCoverageCard(workout, weeklyCoverage) {
     `;
 }
 
+function renderExerciseProgressionCard(exercise, suggestion) {
+    if (!suggestion || !suggestion.latest) {
+        return `
+            <div class="exercise-progression empty">
+                <p>📌 Primeiro registro deste exercício. Foque em técnica e consistência.</p>
+            </div>
+        `;
+    }
+
+    const lastDate = ConsciousTraining.formatDisplayDate(suggestion.latest.date);
+    return `
+        <div class="exercise-progression ${suggestion.action}">
+            <p class="exercise-progression-title">📈 Último registro (${lastDate})</p>
+            <p class="exercise-progression-detail">Topo: ${suggestion.latest.maxWeight}kg • Média: ${suggestion.latest.avgReps} reps</p>
+            <p class="exercise-progression-suggest">Sugestão: ${suggestion.recommendationLabel}</p>
+        </div>
+    `;
+}
+
+function renderExerciseSetInputs(exerciseIndex, exercise, plannedSets, suggestion) {
+    const weightPlaceholder = suggestion?.suggestedWeight ? String(suggestion.suggestedWeight) : 'kg';
+    const repsPlaceholder = exercise.reps || 'reps';
+
+    return Array.from({ length: plannedSets }, (_, setIndex) => `
+        <div class="set-input-row">
+            <span class="set-chip">S${setIndex + 1}</span>
+            <input
+                type="number"
+                step="0.5"
+                class="conscious-input-weight conscious-set-input"
+                id="conscious-weight-${exerciseIndex}-${setIndex}"
+                placeholder="${weightPlaceholder}"
+                oninput="saveTempWorkoutData()"
+            >
+            <input
+                type="number"
+                class="conscious-input-reps conscious-set-input"
+                id="conscious-reps-${exerciseIndex}-${setIndex}"
+                placeholder="${repsPlaceholder}"
+                oninput="saveTempWorkoutData()"
+            >
+        </div>
+    `).join('');
+}
+
 // Renderizar treino consciente
 function renderConsciousWorkout(workout, recommendation, weeklyCoverage) {
     const container = document.getElementById('workout-content') ||
@@ -1081,8 +1294,11 @@ function renderConsciousWorkout(workout, recommendation, weeklyCoverage) {
             ` : ''}
             
             <div class="exercises-list-conscious">
-                ${workout.exercises.map((ex, i) => `
-                    <div class="exercise-card-conscious ${ex.isBooster ? 'booster' : ''}" data-index="${i}" data-planned-sets="${ConsciousTraining.parseSets(ex.sets)}" data-muscle="${ex.muscle || ''}" data-exercise-name="${ex.name}">
+                ${workout.exercises.map((ex, i) => {
+                    const plannedSets = ConsciousTraining.parseSets(ex.sets);
+                    const suggestion = ConsciousTraining.getProgressionSuggestion(ex.name, ex.reps, ex.muscle || ex.target || '');
+                    return `
+                    <div class="exercise-card-conscious ${ex.isBooster ? 'booster' : ''}" data-index="${i}" data-planned-sets="${plannedSets}" data-muscle="${ex.muscle || ''}" data-exercise-name="${ex.name}">
                         <div class="exercise-main">
                             <span class="exercise-number">${i + 1}</span>
                             <div class="exercise-info">
@@ -1094,15 +1310,16 @@ function renderConsciousWorkout(workout, recommendation, weeklyCoverage) {
                             </div>
                         </div>
                         <p class="exercise-tip">${ex.isBooster ? '🎯' : '💡'} ${ex.tip}</p>
-                        
-                        <div class="exercise-inputs" style="margin-top: 15px; display: flex; gap: 10px;">
-                            <div style="flex: 1;">
-                                <label style="font-size: 0.8rem; color: #aaa;">Carga (kg)</label>
-                                <input type="number" class="conscious-input-weight" id="conscious-weight-${i}" placeholder="kg" oninput="saveTempWorkoutData()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+
+                        ${renderExerciseProgressionCard(ex, suggestion)}
+
+                        <div class="exercise-inputs">
+                            <div class="exercise-inputs-header">
+                                <label>Carga por Série (kg)</label>
+                                <label>Reps por Série</label>
                             </div>
-                            <div style="flex: 1;">
-                                <label style="font-size: 0.8rem; color: #aaa;">Reps Totais</label>
-                                <input type="number" class="conscious-input-reps" id="conscious-reps-${i}" placeholder="${ex.reps}" oninput="saveTempWorkoutData()" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #222; color: white;">
+                            <div class="exercise-sets-grid">
+                                ${renderExerciseSetInputs(i, ex, plannedSets, suggestion)}
                             </div>
                         </div>
 
@@ -1119,7 +1336,8 @@ function renderConsciousWorkout(workout, recommendation, weeklyCoverage) {
                             ✅ Feito
                         </button>
                     </div>
-                `).join('')}
+                `;
+                }).join('')}
             </div>
             
             <button class="btn btn-primary btn-lg" id="btnCompleteConsciousWorkout" 
@@ -1147,6 +1365,10 @@ function markExerciseDone(index) {
 
 // Registrar sensação do exercício
 const exerciseLogs = {};
+function clearExerciseLogs() {
+    Object.keys(exerciseLogs).forEach(key => delete exerciseLogs[key]);
+}
+
 function logExerciseFeel(index, feel) {
     exerciseLogs[index] = { feel }; // Start object
 
@@ -1167,19 +1389,40 @@ async function completeConsciousWorkout(workoutId) {
     const cards = document.querySelectorAll('.exercise-card-conscious');
 
     cards.forEach((card, index) => {
-        const weight = card.querySelector(`#conscious-weight-${index}`)?.value;
-        const reps = card.querySelector(`#conscious-reps-${index}`)?.value;
         const name = card.dataset.exerciseName || card.querySelector('h4')?.textContent || 'Exercício';
         const plannedSets = parseInt(card.dataset.plannedSets || '1', 10);
         const muscle = card.dataset.muscle || card.querySelector('.exercise-muscle')?.textContent || '';
         const feel = exerciseLogs[index]?.feel || 'ok';
+        const sets = [];
+
+        for (let setIndex = 0; setIndex < plannedSets; setIndex++) {
+            const weightInput = card.querySelector(`#conscious-weight-${index}-${setIndex}`)?.value || '';
+            const repsInput = card.querySelector(`#conscious-reps-${index}-${setIndex}`)?.value || '';
+            const weight = ConsciousTraining.toNumber(weightInput);
+            const reps = ConsciousTraining.toNumber(repsInput);
+            const hasData = weight > 0 || reps > 0;
+            if (!hasData) continue;
+
+            sets.push({
+                setNumber: setIndex + 1,
+                weight,
+                reps,
+                completed: true
+            });
+        }
+
+        const topWeight = sets.length > 0 ? Math.max(...sets.map(set => set.weight || 0)) : 0;
+        const totalReps = sets.reduce((sum, set) => sum + (set.reps || 0), 0);
+        const totalVolume = sets.reduce((sum, set) => sum + ((set.weight || 0) * (set.reps || 0)), 0);
 
         exerciseData.push({
             name,
             muscle,
             setsPlanned: Number.isNaN(plannedSets) ? 1 : plannedSets,
-            weight: weight || 0,
-            reps: reps || 0,
+            sets,
+            weight: topWeight,
+            reps: totalReps,
+            totalVolume,
             feel
         });
     });
@@ -1188,6 +1431,7 @@ async function completeConsciousWorkout(workoutId) {
 
     // Clear temporary data after successful save
     clearTempWorkoutData();
+    clearExerciseLogs();
 
     // Mostrar sucesso
     if (typeof showSuccess === 'function') {
@@ -1205,6 +1449,7 @@ async function completeConsciousWorkout(workoutId) {
 // Inicializar sistema de treino consciente
 async function initConsciousTraining() {
     await ConsciousTraining.init();
+    clearExerciseLogs();
 
     const container = document.getElementById('workout-content');
     if (!container) return;
@@ -1245,10 +1490,19 @@ function saveTempWorkoutData() {
     const today = new Date().toISOString().split('T')[0];
 
     cards.forEach((card, index) => {
-        const weight = document.getElementById(`conscious-weight-${index}`)?.value || '';
-        const reps = document.getElementById(`conscious-reps-${index}`)?.value || '';
-        if (weight || reps) {
-            tempData[index] = { weight, reps };
+        const plannedSets = parseInt(card.dataset.plannedSets || '1', 10);
+        const sets = [];
+        let hasAnyData = false;
+
+        for (let setIndex = 0; setIndex < plannedSets; setIndex++) {
+            const weight = document.getElementById(`conscious-weight-${index}-${setIndex}`)?.value || '';
+            const reps = document.getElementById(`conscious-reps-${index}-${setIndex}`)?.value || '';
+            if (weight || reps) hasAnyData = true;
+            sets.push({ weight, reps });
+        }
+
+        if (hasAnyData) {
+            tempData[index] = { sets };
         }
     });
 
@@ -1276,10 +1530,21 @@ function loadTempWorkoutData() {
         }
 
         for (const [index, values] of Object.entries(data)) {
-            const weightInput = document.getElementById(`conscious-weight-${index}`);
-            const repsInput = document.getElementById(`conscious-reps-${index}`);
-            if (weightInput && values.weight) weightInput.value = values.weight;
-            if (repsInput && values.reps) repsInput.value = values.reps;
+            if (Array.isArray(values?.sets)) {
+                values.sets.forEach((setValues, setIndex) => {
+                    const weightInput = document.getElementById(`conscious-weight-${index}-${setIndex}`);
+                    const repsInput = document.getElementById(`conscious-reps-${index}-${setIndex}`);
+                    if (weightInput && setValues?.weight) weightInput.value = setValues.weight;
+                    if (repsInput && setValues?.reps) repsInput.value = setValues.reps;
+                });
+                continue;
+            }
+
+            // Compatibilidade com formato antigo (um campo por exercício)
+            const legacyWeightInput = document.getElementById(`conscious-weight-${index}-0`);
+            const legacyRepsInput = document.getElementById(`conscious-reps-${index}-0`);
+            if (legacyWeightInput && values?.weight) legacyWeightInput.value = values.weight;
+            if (legacyRepsInput && values?.reps) legacyRepsInput.value = values.reps;
         }
         console.log('✅ Dados temporários restaurados');
     } catch (e) {
@@ -1329,5 +1594,6 @@ window.resetConsciousTraining = function () {
         density: null
     };
     clearTempWorkoutData();
+    clearExerciseLogs();
     console.log('🧹 ConsciousTraining state cleared');
 };

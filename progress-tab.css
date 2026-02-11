@@ -1,0 +1,171 @@
+.progress-tab {
+    padding: 16px;
+}
+
+.progress-tab h2 {
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.progress-subtitle {
+    margin: 6px 0 16px 0;
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+.progress-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.progress-card {
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.9), rgba(15, 23, 42, 0.9));
+}
+
+.progress-card-label {
+    display: block;
+    color: #9ca3af;
+    font-size: 0.78rem;
+    margin-bottom: 6px;
+}
+
+.progress-card strong {
+    font-size: 1.2rem;
+    color: #f8fafc;
+}
+
+.progress-section-card {
+    border-radius: 14px;
+    padding: 14px;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.82));
+    margin-bottom: 14px;
+}
+
+.progress-section-card h3 {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+}
+
+.exercise-evolution-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.exercise-evolution-item {
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.exercise-evolution-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.exercise-evolution-head span {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}
+
+.exercise-evolution-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+}
+
+.exercise-evolution-metrics strong {
+    color: #f8fafc;
+}
+
+.exercise-evolution-metrics .up {
+    color: #22c55e;
+}
+
+.exercise-evolution-metrics .down {
+    color: #ef4444;
+}
+
+.exercise-evolution-metrics .flat {
+    color: #eab308;
+}
+
+.exercise-progress-bar {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(148, 163, 184, 0.2);
+}
+
+.exercise-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #22c55e, #14b8a6);
+}
+
+.recent-workouts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.recent-workout-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.65);
+}
+
+.recent-workout-item p {
+    margin: 3px 0 0 0;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.recent-workout-item span {
+    color: #f8fafc;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.progress-empty,
+.progress-loading {
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.75);
+    padding: 18px;
+    text-align: center;
+    color: #cbd5e1;
+}
+
+@media (max-width: 640px) {
+    .progress-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .exercise-evolution-metrics {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .recent-workout-item {
+        align-items: flex-start;
+    }
+}
